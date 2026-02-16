@@ -20,9 +20,13 @@ const api = axios.create({
   },
 });
 
+export const getApiBaseUrl = () => import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export const libraryAPI = {
   getStats: () =>
     api.get<LibraryStats>("/library/stats").then((res) => res.data),
+  getStreamUrl: (trackId: number) =>
+    `${getApiBaseUrl()}/library/tracks/${trackId}/stream`,
   getTracks: (params?: any) =>
     api.get<Track[]>("/library/tracks", { params }).then((res) => res.data),
   scanLibrary: () => api.post("/library/scan").then((res) => res.data),

@@ -20,6 +20,7 @@ import {
   setDuration,
   setVolume,
 } from "../../store/slices/audioSlice";
+import { libraryAPI } from "../../services/api";
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -46,7 +47,7 @@ const AudioPlayer: React.FC = () => {
 
     // Create new Howl instance
     howlRef.current = new Howl({
-      src: [`/api/tracks/${currentTrack.id}/stream`],
+      src: [libraryAPI.getStreamUrl(currentTrack.id!)],
       volume: volume,
       onload: () => {
         if (howlRef.current) {

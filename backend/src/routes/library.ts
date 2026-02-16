@@ -1,5 +1,6 @@
 // backend/src/routes/library.ts
 import { Router } from "express";
+import fs from "fs";
 import { DatabaseService } from "../services/DatabaseService";
 import { LibraryScanner } from "../services/LibraryScanner";
 import { AudioAnalyzer } from "../services/AudioAnalyzer";
@@ -119,6 +120,74 @@ router.delete("/tracks/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting track:", error);
     res.status(500).json({ error: "Failed to delete track" });
+  }
+});
+
+// GET /api/library/tracks/:id/stream - Stream audio file
+router.get("/tracks/:id/stream", async (req, res) => {
+  try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
+    const track = databaseService.getTrackById(Number(req.params.id));
+
+    if (!track) {
+      return res.status(404).json({ error: "Track not found" });
+    }
+
+    const filePath = track.file_path;
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Audio file not found" });
+    }
+
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    // Determine content type based on file extension
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      ".mp3": "audio/mpeg",
+      ".flac": "audio/flac",
+      ".wav": "audio/wav",
+      ".aiff": "audio/aiff",
+      ".aif": "audio/aiff",
+      ".m4a": "audio/mp4",
+      ".ogg": "audio/ogg",
+      ".opus": "audio/opus",
+    };
+    const contentType = mimeTypes[ext] || "audio/mpeg";
+
+    if (range) {
+      // Handle range request for seeking
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = end - start + 1;
+
+      const stream = fs.createReadStream(filePath, { start, end });
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": contentType,
+      });
+
+      stream.pipe(res);
+    } else {
+      // Full file request
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": contentType,
+        "Accept-Ranges": "bytes",
+      });
+
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (error) {
+    console.error("Error streaming track:", error);
+    res.status(500).json({ error: "Failed to stream track" });
   }
 });
 
