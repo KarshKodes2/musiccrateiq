@@ -7,8 +7,11 @@ import multer from "multer";
 import path from "path";
 
 const router = Router();
-const libraryScanner = new LibraryScanner();
+let libraryScanner: LibraryScanner | null = null;
 const audioAnalyzer = new AudioAnalyzer();
+
+// Store current scan progress globally for SSE
+let currentScanProgress = { processed: 0, total: 0, isScanning: false, currentFile: '' };
 
 // Configure multer for file uploads
 const upload = multer({
@@ -122,26 +125,44 @@ router.delete("/tracks/:id", async (req, res) => {
 // POST /api/library/scan - Scan music library
 router.post("/scan", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const musicLibraryPath = process.env.MUSIC_LIBRARY_PATH;
+
     if (!musicLibraryPath) {
       return res
         .status(400)
         .json({ error: "Music library path not configured" });
     }
 
-    if (libraryScanner.isCurrentlyScanning()) {
+    if (libraryScanner?.isCurrentlyScanning()) {
       return res
         .status(409)
         .json({ error: "Library scan already in progress" });
     }
 
+    // Create LibraryScanner with the initialized databaseService
+    libraryScanner = new LibraryScanner(databaseService);
+
+    // Reset progress
+    currentScanProgress = { processed: 0, total: 0, isScanning: true, currentFile: '' };
+
     // Start scan in background
     libraryScanner
       .scanLibrary(musicLibraryPath, (progress) => {
-        // In a real implementation, you'd use WebSockets to send progress updates
-        console.log(`Scan progress: ${progress.percentage}%`);
+        currentScanProgress = {
+          processed: progress.processed,
+          total: progress.total,
+          isScanning: true,
+          currentFile: progress.currentFile || '',
+        };
+        console.log(`Scan progress: ${progress.percentage}% - ${progress.currentFile}`);
+      })
+      .then(() => {
+        currentScanProgress.isScanning = false;
+        console.log("Library scan completed successfully");
       })
       .catch((error) => {
+        currentScanProgress.isScanning = false;
         console.error("Library scan failed:", error);
       });
 
@@ -156,11 +177,34 @@ router.post("/scan", async (req, res) => {
   }
 });
 
+// POST /api/library/scan/stop - Stop the current scan
+router.post("/scan/stop", (req, res) => {
+  try {
+    if (libraryScanner && libraryScanner.isCurrentlyScanning()) {
+      libraryScanner.stopScan();
+      currentScanProgress.isScanning = false;
+      res.json({ success: true, message: "Scan stop requested" });
+    } else {
+      res.status(400).json({ error: "No scan in progress" });
+    }
+  } catch (error) {
+    console.error("Error stopping scan:", error);
+    res.status(500).json({ error: "Failed to stop scan" });
+  }
+});
+
 // GET /api/library/scan/progress - Get scan progress
 router.get("/scan/progress", (req, res) => {
   try {
-    const progress = libraryScanner.getScanProgress();
-    res.json(progress);
+    res.json({
+      current: currentScanProgress.processed,
+      total: currentScanProgress.total,
+      isScanning: currentScanProgress.isScanning,
+      currentFile: currentScanProgress.currentFile,
+      percentage: currentScanProgress.total > 0
+        ? Math.round((currentScanProgress.processed / currentScanProgress.total) * 100)
+        : 0,
+    });
   } catch (error) {
     console.error("Error getting scan progress:", error);
     res.status(500).json({ error: "Failed to get scan progress" });

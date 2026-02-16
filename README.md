@@ -1,6 +1,8 @@
-# DJ Library Manager
+# MusicCrateIQ
 
-A comprehensive music library management system designed for professional DJs, featuring **pluggable audio analysis**, **era-based organization**, **smart crates with Nigerian music support**, harmonic playlist generation, and Serato integration.
+**Intelligent Music Library Management for DJs and Music Professionals**
+
+A comprehensive music library management system featuring **pluggable audio analysis**, **era-based organization**, **smart crates with Nigerian music support**, harmonic playlist generation, and Serato integration.
 
 ## 🎯 Key Features
 

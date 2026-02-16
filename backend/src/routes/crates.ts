@@ -159,6 +159,28 @@ router.delete("/:id/tracks/:trackId", async (req, res) => {
   }
 });
 
+// POST /api/crates/preview - Preview smart crate matches
+router.post("/preview", async (req, res) => {
+  try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
+    const { criteria } = req.body;
+
+    if (!criteria || !criteria.rules) {
+      return res.status(400).json({ error: "Invalid criteria" });
+    }
+
+    const matchingTrackIds = findTracksMatchingRules(criteria, databaseService);
+
+    res.json({
+      count: matchingTrackIds.length,
+      trackIds: matchingTrackIds,
+    });
+  } catch (error) {
+    console.error("Error previewing crate:", error);
+    res.status(500).json({ error: "Failed to preview crate" });
+  }
+});
+
 // POST /api/crates/:id/refresh - Refresh smart crate
 router.post("/:id/refresh", async (req, res) => {
   try {
@@ -195,7 +217,87 @@ router.post("/:id/refresh", async (req, res) => {
   }
 });
 
-// Helper function for smart crate criteria
+// Helper function for new rule-based criteria
+function findTracksMatchingRules(criteria: any, databaseService: DatabaseService): number[] {
+  const db = databaseService.getDatabase();
+  const { logic = 'AND', rules = [] } = criteria;
+
+  if (rules.length === 0) {
+    return [];
+  }
+
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  rules.forEach((rule: any) => {
+    const { field, operator, value } = rule;
+
+    switch (operator) {
+      case 'eq':
+        conditions.push(`${field} = ?`);
+        params.push(value);
+        break;
+      case 'neq':
+        conditions.push(`${field} != ?`);
+        params.push(value);
+        break;
+      case 'gt':
+        conditions.push(`${field} > ?`);
+        params.push(value);
+        break;
+      case 'gte':
+        conditions.push(`${field} >= ?`);
+        params.push(value);
+        break;
+      case 'lt':
+        conditions.push(`${field} < ?`);
+        params.push(value);
+        break;
+      case 'lte':
+        conditions.push(`${field} <= ?`);
+        params.push(value);
+        break;
+      case 'range':
+        if (Array.isArray(value) && value.length === 2) {
+          conditions.push(`${field} >= ? AND ${field} <= ?`);
+          params.push(value[0], value[1]);
+        }
+        break;
+      case 'in':
+        if (Array.isArray(value) && value.length > 0) {
+          const placeholders = value.map(() => '?').join(',');
+          conditions.push(`${field} IN (${placeholders})`);
+          params.push(...value);
+        }
+        break;
+      case 'contains':
+        if (Array.isArray(value) && value.length > 0) {
+          // For JSON array fields, we need to check if any value is in the array
+          const orConditions = value.map(() => `${field} LIKE ?`).join(' OR ');
+          conditions.push(`(${orConditions})`);
+          value.forEach((v: string) => params.push(`%"${v}"%`));
+        }
+        break;
+    }
+  });
+
+  if (conditions.length === 0) {
+    return [];
+  }
+
+  const whereClause = conditions.join(logic === 'OR' ? ' OR ' : ' AND ');
+  const sql = `SELECT id FROM tracks WHERE ${whereClause}`;
+
+  try {
+    const results = db.prepare(sql).all(...params) as { id: number }[];
+    return results.map((row) => row.id);
+  } catch (error) {
+    console.error('Error executing smart crate query:', error);
+    return [];
+  }
+}
+
+// Helper function for smart crate criteria (legacy format)
 function findTracksMatchingCriteria(criteria: any, databaseService: DatabaseService): number[] {
   const db = databaseService.getDatabase();
   let sql = "SELECT id FROM tracks WHERE 1=1";

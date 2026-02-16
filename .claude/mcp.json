@@ -1,0 +1,61 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp.json",
+  "mcpServers": {
+    "fetch": {
+      "command": "/Users/spoxio/Desktop/project-base/personal/dj-library-manager/.claude/mcp-logger-wrapper.sh",
+      "args": ["fetch", "npx", "-y", "@modelcontextprotocol/server-fetch"],
+      "description": "Fetch and convert web content to markdown (with logging)",
+      "use_cases": [
+        "Fetch documentation for Spotify, Last.fm, MusicBrainz APIs, youtube music",
+        "Research DJ software integration guides",
+        "Get latest package versions and changelogs",
+        "Fetch music metadata from online sources"
+      ]
+    },
+    "memory": {
+      "command": "/Users/spoxio/Desktop/project-base/personal/dj-library-manager/.claude/mcp-logger-wrapper.sh",
+      "args": ["memory", "npx", "-y", "@modelcontextprotocol/server-memory"],
+      "description": "Persistent knowledge graph for context across sessions (with logging)",
+      "use_cases": [
+        "Store music enrichment strategies and API patterns",
+        "Remember crate configurations and smart rules",
+        "Track implementation progress across sessions",
+        "Store Nigerian genre mappings and Camelot wheel data",
+        "Cache API rate limiting strategies",
+        "Remember successful metadata matching patterns"
+      ]
+    },
+    "playwright": {
+      "command": "/Users/spoxio/Desktop/project-base/personal/dj-library-manager/.claude/mcp-logger-wrapper.sh",
+      "args": ["playwright", "mcp-playwright"],
+      "description": "Browser automation for E2E testing and scraping (with logging)",
+      "use_cases": [
+        "E2E tests for Smart Crate Builder UI",
+        "Test playlist generation flows",
+        "Automated UI regression testing",
+        "Scrape YouTube Music track data (when API not available)",
+        "Test metadata enrichment workflows",
+        "Screenshot documentation"
+      ]
+    },
+    "filesystem": {
+      "command": "/Users/spoxio/Desktop/project-base/personal/dj-library-manager/.claude/mcp-logger-wrapper.sh",
+      "args": [
+        "filesystem",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/spoxio/Desktop/project-base/personal/dj-library-manager"
+      ],
+      "description": "Secure file operations with configurable access controls (with logging)",
+      "use_cases": [
+        "Read/write audio files for analysis",
+        "Manage library folder scanning",
+        "Handle CSV/XML export files",
+        "Access Serato/Rekordbox database files",
+        "Manage API credentials in .env files",
+        "Read/write enrichment cache files"
+      ]
+    }
+  }
+}

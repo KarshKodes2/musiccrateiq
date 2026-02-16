@@ -1,7 +1,7 @@
 {
-  "name": "dj-library-manager-backend",
+  "name": "musiccrateiq-backend",
   "version": "1.0.0",
-  "description": "DJ Library Manager Backend API",
+  "description": "MusicCrateIQ Backend API",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.13.5",
     "better-sqlite3": "^12.2.0",
     "chokidar": "^4.0.3",
     "compression": "^1.8.1",
@@ -25,7 +26,8 @@
     "music-metadata": "^7.14.0",
     "node-cron": "^4.2.1",
     "sharp": "^0.34.3",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "ytmusic-api": "^5.3.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

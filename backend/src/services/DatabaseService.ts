@@ -162,6 +162,7 @@ export class DatabaseService {
 
       // Create all tables
       this.createTables();
+      this.migrateSchema();
       this.createIndexes();
       this.seedInitialData();
 
@@ -392,6 +393,50 @@ export class DatabaseService {
     `);
 
     console.log("✅ Database tables created successfully");
+  }
+
+  private migrateSchema(): void {
+    if (!this.db) return;
+
+    // Get existing columns in tracks table
+    const columns = this.db
+      .prepare("PRAGMA table_info(tracks)")
+      .all() as { name: string }[];
+    const existingColumns = new Set(columns.map((c) => c.name));
+
+    // Define columns that may be missing from older schemas
+    const migrations: { column: string; definition: string }[] = [
+      { column: "mood_tags", definition: "TEXT DEFAULT '[]'" },
+      { column: "genre_tags", definition: "TEXT DEFAULT '[]'" },
+      { column: "era", definition: "TEXT CHECK(era IN ('70s', '80s', '90s', '2000s', '2010s', '2020s', NULL))" },
+      { column: "analysis_status", definition: "TEXT DEFAULT 'pending' CHECK(analysis_status IN ('pending', 'analyzing', 'complete', 'failed'))" },
+      { column: "needs_reanalysis", definition: "INTEGER DEFAULT 0 CHECK(needs_reanalysis IN (0, 1))" },
+      { column: "bpm_confidence", definition: "REAL DEFAULT 0" },
+      { column: "bpm_source", definition: "TEXT DEFAULT 'pending'" },
+      { column: "key_confidence", definition: "REAL DEFAULT 0" },
+      { column: "key_source", definition: "TEXT DEFAULT 'pending'" },
+      { column: "analysis_version", definition: "TEXT" },
+    ];
+
+    let migrationsApplied = 0;
+    for (const migration of migrations) {
+      if (!existingColumns.has(migration.column)) {
+        try {
+          this.db.exec(`ALTER TABLE tracks ADD COLUMN ${migration.column} ${migration.definition}`);
+          console.log(`✅ Added missing column: tracks.${migration.column}`);
+          migrationsApplied++;
+        } catch (error: any) {
+          // Column might already exist or other error
+          if (!error.message.includes("duplicate column")) {
+            console.warn(`Warning adding column ${migration.column}:`, error.message);
+          }
+        }
+      }
+    }
+
+    if (migrationsApplied > 0) {
+      console.log(`✅ Schema migration complete: ${migrationsApplied} columns added`);
+    }
   }
 
   private createIndexes(): void {
@@ -1056,7 +1101,7 @@ export class DatabaseService {
         last_played, date_added, file_hash, serato_id, beatgrid, cue_points, loops,
         waveform_overview, waveform_detail, artwork_path, comment, grouping, folder_path
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `);
 

@@ -26,6 +26,7 @@ export const libraryAPI = {
   getTracks: (params?: any) =>
     api.get<Track[]>("/library/tracks", { params }).then((res) => res.data),
   scanLibrary: () => api.post("/library/scan").then((res) => res.data),
+  stopScan: () => api.post("/library/scan/stop").then((res) => res.data),
   getScanProgress: () =>
     api.get("/library/scan/progress").then((res) => res.data),
   getTrack: (id: number) =>
@@ -87,4 +88,5 @@ export const analyticsAPI = {
   getStats: () => api.get("/analytics").then((res) => res.data),
 };
 
+export { api };
 export default api;

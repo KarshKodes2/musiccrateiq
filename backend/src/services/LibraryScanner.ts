@@ -9,6 +9,7 @@ export class LibraryScanner {
   private audioAnalyzer: AudioAnalyzer;
   private supportedFormats = [".mp3", ".flac", ".wav", ".aiff", ".m4a", ".ogg"];
   private isScanning = false;
+  private shouldStopScan = false;
   private scanProgress = { processed: 0, total: 0 };
 
   constructor(databaseService?: DatabaseService) {
@@ -25,6 +26,7 @@ export class LibraryScanner {
     }
 
     this.isScanning = true;
+    this.shouldStopScan = false;
     console.log(`🔍 Starting library scan: ${libraryPath}`);
 
     try {
@@ -64,6 +66,12 @@ export class LibraryScanner {
 
         // Small delay between batches to prevent system overload
         await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Check if scan should be stopped
+        if (this.shouldStopScan) {
+          console.log(`⏹️ Scan stopped by user. Processed ${this.scanProgress.processed}/${this.scanProgress.total} files`);
+          return;
+        }
       }
 
       // Update smart crates after scanning
@@ -357,5 +365,14 @@ export class LibraryScanner {
 
   public isCurrentlyScanning(): boolean {
     return this.isScanning;
+  }
+
+  public stopScan(): boolean {
+    if (this.isScanning) {
+      this.shouldStopScan = true;
+      console.log("⏸️ Stop scan requested");
+      return true;
+    }
+    return false;
   }
 }

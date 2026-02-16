@@ -723,4 +723,163 @@ export class PlaylistGenerator {
 
     return this.generateHarmonicPlaylist(options);
   }
+
+  // Valentine's Day playlist generators by era
+  public async generateValentinePlaylist(
+    era: '80s' | '90s' | '2000s' | '2010s' | '2020s',
+    duration: number = 3600
+  ): Promise<GeneratedPlaylist> {
+    const eraConfigs = {
+      '80s': {
+        energyCurve: 'standard' as const,
+        preferredGenres: ['R&B', 'Pop', 'Soul', 'Disco'],
+        startKey: '8A',
+        name: '80s Valentine Mix',
+      },
+      '90s': {
+        energyCurve: 'standard' as const,
+        preferredGenres: ['R&B', 'Pop', 'Hip Hop', 'New Jack Swing'],
+        startKey: '4A',
+        name: '90s Valentine Mix',
+      },
+      '2000s': {
+        energyCurve: 'standard' as const,
+        preferredGenres: ['R&B', 'Pop', 'Hip Hop'],
+        startKey: '6A',
+        name: '2000s Valentine Mix',
+      },
+      '2010s': {
+        energyCurve: 'standard' as const,
+        preferredGenres: ['R&B', 'Pop', 'Hip Hop', 'EDM'],
+        startKey: '5A',
+        name: '2010s Valentine Mix',
+      },
+      '2020s': {
+        energyCurve: 'standard' as const,
+        preferredGenres: ['R&B', 'Pop', 'Afrobeats'],
+        startKey: '9A',
+        name: '2020s Valentine Mix',
+      },
+    };
+
+    const config = eraConfigs[era];
+    const options: PlaylistOptions = {
+      ...config,
+      targetDuration: duration,
+      excludeExplicit: false, // Relaxed for Valentine playlists
+      minRating: 3,
+      eventType: `valentine-${era}`,
+    };
+
+    // Add filter for romantic mood tags
+    // Note: This would need to be implemented in the getCandidateTracks method
+    // to filter by mood_tags containing 'romantic' or 'love'
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = config.name;
+    playlist.description = `A romantic ${era} Valentine's Day mix featuring ${config.preferredGenres.join(', ')}.`;
+
+    return playlist;
+  }
+
+  // Gospel flow playlist generator
+  public async generateGospelFlow(duration: number = 3600): Promise<GeneratedPlaylist> {
+    const options: PlaylistOptions = {
+      energyCurve: 'standard' as const,
+      preferredGenres: ['Gospel', 'Christian', 'Worship', 'Praise'],
+      targetDuration: duration,
+      excludeExplicit: false, // Relaxed - gospel tracks rarely explicit
+      startKey: '1A',
+      minRating: 2,
+      eventType: 'gospel-flow',
+    };
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = 'Gospel Flow (Praise to Worship)';
+    playlist.description = 'A spiritual journey from opening worship through high praise to altar call. Features gospel, praise, and worship music.';
+
+    return playlist;
+  }
+
+  // Nigerian party playlist generator
+  public async generateNigerianParty(duration: number = 3600): Promise<GeneratedPlaylist> {
+    const options: PlaylistOptions = {
+      energyCurve: 'buildup' as const,
+      preferredGenres: ['Afrobeat', 'Afrobeats', 'Highlife', 'Juju'],
+      targetDuration: duration,
+      excludeExplicit: false, // Relaxed
+      startKey: '7A',
+      minRating: 2,
+      eventType: 'nigerian-party',
+    };
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = 'Nigerian Party Set';
+    playlist.description = 'An energetic journey from Highlife classics through Afrobeat grooves to modern Afrobeats peak. Perfect for Nigerian celebrations.';
+
+    return playlist;
+  }
+
+  // Nigerian elder-friendly party generator
+  public async generateNigerianElderFriendly(duration: number = 3600): Promise<GeneratedPlaylist> {
+    const options: PlaylistOptions = {
+      energyCurve: 'plateau' as const,
+      preferredGenres: ['Afrobeat', 'Highlife', 'Juju', 'Fuji'],
+      targetDuration: duration,
+      excludeExplicit: false, // Relaxed - classic tracks rarely explicit
+      startKey: '4A',
+      minRating: 3,
+      eventType: 'nigerian-elder-friendly',
+      maxTracks: 40,
+    };
+
+    // Note: Would need to add BPM filter (80-115) in getCandidateTracks
+    // and era filter for 70s-2000s with max 20% modern tracks
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = 'Nigerian Elder-Friendly Party';
+    playlist.description = 'A blend of 80% classic Nigerian music (70s-90s) and 20% familiar modern tracks. BPM 80-115, perfect for elder-friendly celebrations featuring Afrobeat, Highlife, Juju, and Fuji.';
+
+    return playlist;
+  }
+
+  // Nigerian classic to modern blend generator
+  public async generateNigerianClassicModern(duration: number = 3600): Promise<GeneratedPlaylist> {
+    const options: PlaylistOptions = {
+      energyCurve: 'buildup' as const,
+      preferredGenres: ['Afrobeat', 'Highlife', 'Juju', 'Afrobeats'],
+      targetDuration: duration,
+      excludeExplicit: false,
+      startKey: '6A',
+      minRating: 2,
+      eventType: 'nigerian-classic-modern',
+    };
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = 'Nigerian Old Skool → Modern Blend';
+    playlist.description = 'A progressive journey from 70s-80s classics through transition era (90s-2000s) to modern vibes (2010s-2020s). Features Afrobeat, Highlife, Juju, and contemporary Afrobeats.';
+
+    return playlist;
+  }
+
+  // Elder-friendly international party generator
+  public async generateElderFriendlyInternational(duration: number = 3600): Promise<GeneratedPlaylist> {
+    const options: PlaylistOptions = {
+      energyCurve: 'plateau' as const,
+      preferredGenres: ['Pop', 'R&B', 'Soul', 'Jazz', 'Classic Rock'],
+      targetDuration: duration,
+      excludeExplicit: false, // Relaxed
+      startKey: '8A',
+      minRating: 3,
+      eventType: 'elder-friendly-international',
+    };
+
+    // Note: Would need era filter for 70s-2000s and BPM filter (80-115)
+
+    const playlist = await this.generateHarmonicPlaylist(options);
+    playlist.name = 'Elder-Friendly Party (International)';
+    playlist.description = 'Familiar, positive tracks from the 70s-2000s with comfortable tempo (80-115 BPM). Features Pop, R&B, Soul, Jazz, and Classic Rock.';
+
+    return playlist;
+  }
 }

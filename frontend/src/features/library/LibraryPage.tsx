@@ -14,12 +14,14 @@ import {
   SortDesc,
   Edit,
   XSquare,
+  StopCircle,
 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../store";
 import {
   fetchTracks,
   scanLibrary,
+  stopScan,
   setViewMode,
   setSortBy,
 } from "../../store/slices/librarySlice";
@@ -131,13 +133,34 @@ const LibraryPage: React.FC = () => {
           })
         );
       await dispatch(scanLibrary()).unwrap();
-        
+
     } catch (error) {
       dispatch(
         addNotification({
           type: "error",
           title: "Scan Failed",
           message: "Failed to start library scan. Please try again.",
+        })
+      );
+    }
+  };
+
+  const handleStopScan = async () => {
+    try {
+      await dispatch(stopScan()).unwrap();
+      dispatch(
+        addNotification({
+          type: "info",
+          title: "Scan Stopped",
+          message: "Library scan has been stopped.",
+        })
+      );
+    } catch (error) {
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Stop Failed",
+          message: "Failed to stop library scan.",
         })
       );
     }
@@ -267,16 +290,23 @@ const LibraryPage: React.FC = () => {
               </TabsList>
             </Tabs>
 
-            <Button
-              onClick={handleScanLibrary}
-              disabled={isScanning}
-              variant="outline"
-            >
-              <RefreshCw
-                className={cn("h-4 w-4 mr-2", isScanning && "animate-spin")}
-              />
-              {isScanning ? "Scanning..." : "Scan Library"}
-            </Button>
+            {isScanning ? (
+              <Button
+                onClick={handleStopScan}
+                variant="destructive"
+              >
+                <StopCircle className="h-4 w-4 mr-2" />
+                Stop Scan
+              </Button>
+            ) : (
+              <Button
+                onClick={handleScanLibrary}
+                variant="outline"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Scan Library
+              </Button>
+            )}
           </div>
         </div>
 
@@ -284,7 +314,10 @@ const LibraryPage: React.FC = () => {
         {isScanning && (
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-              <span>Scanning music library...</span>
+              <span className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Scanning music library...
+              </span>
               <span>{Math.round(scanProgress)}%</span>
             </div>
             <Progress value={scanProgress} className="h-2" />

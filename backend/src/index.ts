@@ -20,6 +20,7 @@ import analyticsRoutes from "./routes/analytics";
 import seratoRoutes from "./routes/serato";
 import batchRoutes from "./routes/batch";
 import settingsRoutes from "./routes/settings";
+import enrichmentRoutes from "./routes/enrichment";
 
 // Load environment variables
 dotenv.config();
@@ -67,6 +68,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/serato", seratoRoutes);
 app.use("/api/batch", batchRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/enrichment", enrichmentRoutes);
 
 // Serve static files (uploaded artwork, etc.)
 const uploadsPath = path.join(__dirname, "..", process.env.UPLOADS_FOLDER || "uploads");

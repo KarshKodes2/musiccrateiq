@@ -34,20 +34,15 @@ export const SettingsPage: React.FC = () => {
       // Use Electron IPC to open folder dialog
       if (window.electron?.selectFolder) {
         const result = await window.electron.selectFolder();
-        if (result && !result.canceled && result.filePaths.length > 0) {
+        if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
           const path = result.filePaths[0];
           await saveSettings('musicLibraryPath', path);
         }
       } else {
-        // Fallback for web version - use input
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = settings.musicLibraryPath || '';
-        input.placeholder = 'Enter music library path';
-
+        // Fallback for web version - use prompt
         const path = prompt('Enter music library path:', settings.musicLibraryPath || '');
-        if (path) {
-          await saveSettings('musicLibraryPath', path);
+        if (path && path.trim()) {
+          await saveSettings('musicLibraryPath', path.trim());
         }
       }
     } catch (error) {
@@ -95,30 +90,32 @@ export const SettingsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading settings...</div>
+        <div className="text-lg text-foreground">Loading settings...</div>
       </div>
     );
   }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Settings</h1>
 
       {/* Message */}
       {message && (
         <div className={`mb-4 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          message.type === 'success'
+            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+            : 'bg-red-500/10 text-red-400 border border-red-500/20'
         }`}>
           {message.text}
         </div>
       )}
 
       {/* Music Library Path */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Music Library</h2>
+      <div className="bg-card rounded-lg border border-border p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-foreground">Music Library</h2>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Music Library Path
           </label>
           <div className="flex gap-2">
@@ -126,18 +123,18 @@ export const SettingsPage: React.FC = () => {
               type="text"
               value={settings.musicLibraryPath || ''}
               readOnly
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+              className="flex-1 px-3 py-2 border border-border rounded-md bg-muted text-foreground"
               placeholder="No path selected"
             />
             <button
               onClick={handleSelectFolder}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
             >
               Browse...
             </button>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Select the folder where your music files are stored
           </p>
         </div>
@@ -146,7 +143,7 @@ export const SettingsPage: React.FC = () => {
           <button
             onClick={handleStartScan}
             disabled={saving}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400"
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-muted disabled:text-muted-foreground"
           >
             {saving ? 'Scanning...' : 'Scan Library'}
           </button>
@@ -154,24 +151,24 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Port Configuration Reference */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Port Configuration</h2>
+      <div className="bg-muted rounded-lg p-6 border border-border">
+        <h2 className="text-xl font-semibold mb-4 text-foreground">Port Configuration</h2>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Frontend:</span>
-            <span className="font-mono">http://localhost:3000</span>
+            <span className="text-muted-foreground">Frontend:</span>
+            <span className="font-mono text-foreground">http://localhost:3000</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Backend API:</span>
-            <span className="font-mono">http://localhost:5000</span>
+            <span className="text-muted-foreground">Backend API:</span>
+            <span className="font-mono text-foreground">http://localhost:5000</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">WebSocket:</span>
-            <span className="font-mono">ws://localhost:5000</span>
+            <span className="text-muted-foreground">WebSocket:</span>
+            <span className="font-mono text-foreground">ws://localhost:5000</span>
           </div>
         </div>
-        <p className="mt-4 text-xs text-gray-500">
-          Port configuration is managed in <code className="bg-gray-200 px-1 rounded">.env.ports</code>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Port configuration is managed in <code className="bg-secondary px-1 rounded text-foreground">.env.ports</code>
         </p>
       </div>
     </div>

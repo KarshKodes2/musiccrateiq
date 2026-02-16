@@ -1,7 +1,7 @@
 {
-  "name": "dj-library-manager",
+  "name": "musiccrateiq",
   "version": "1.0.0",
-  "description": "Professional DJ Library Management System - Lexicon DJ Alternative",
+  "description": "MusicCrateIQ - Intelligent Music Library Management for DJs and Music Professionals",
   "main": "electron/main.js",
   "author": "Your Name",
   "license": "MIT",
@@ -9,12 +9,12 @@
   "scripts": {
     "start": "electron .",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"wait-on http://localhost:3000 http://localhost:5000/health && cross-env NODE_ENV=development electron .\"",
-    "dev:backend": "pnpm --filter dj-library-manager-backend dev",
-    "dev:frontend": "pnpm --filter dj-library-manager-frontend dev",
+    "dev:backend": "pnpm --filter musiccrateiq-backend dev",
+    "dev:frontend": "pnpm --filter musiccrateiq-frontend dev",
     "dev:services": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
     "build": "pnpm run build:backend && pnpm run build:frontend",
-    "build:backend": "pnpm --filter dj-library-manager-backend build",
-    "build:frontend": "pnpm --filter dj-library-manager-frontend build",
+    "build:backend": "pnpm --filter musiccrateiq-backend build",
+    "build:frontend": "pnpm --filter musiccrateiq-frontend build",
     "pack": "pnpm run build && electron-builder --dir",
     "dist": "pnpm run build && electron-builder",
     "dist:mac": "pnpm run build && electron-builder --mac",
@@ -40,8 +40,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.djlibrarymanager.app",
-    "productName": "DJ Library Manager",
+    "appId": "com.musiccrateiq.app",
+    "productName": "MusicCrateIQ",
     "directories": {
       "output": "dist-electron"
     },

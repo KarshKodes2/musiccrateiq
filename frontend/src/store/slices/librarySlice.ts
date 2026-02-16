@@ -41,16 +41,26 @@ export const scanLibrary = createAsyncThunk(
       return libraryAPI.getScanProgress().then((progressResponse) => {
         if (progressResponse) {
           dispatch(updateScanProgress(progressResponse));
-          if (progressResponse.current < progressResponse.total) {
+
+          // Continue polling if scan is still in progress
+          if (progressResponse.isScanning) {
             setTimeout(pollProgress, 1000);
           } else {
+            // Scan finished
             dispatch(scanCompleted());
+            // Refresh tracks after scan completes
+            dispatch(fetchTracks({}));
           }
         }
+      }).catch((error) => {
+        console.error("Error polling scan progress:", error);
+        // Retry polling on error
+        setTimeout(pollProgress, 2000);
       });
     };
 
-    pollProgress();
+    // Start polling after a short delay to let the scan initialize
+    setTimeout(pollProgress, 500);
     return response;
   }
 );
@@ -76,6 +86,14 @@ export const deleteTrack = createAsyncThunk(
   async (id: number) => {
     await libraryAPI.deleteTrack(id);
     return id;
+  }
+);
+
+export const stopScan = createAsyncThunk(
+  "library/stopScan",
+  async () => {
+    const response = await libraryAPI.stopScan();
+    return response;
   }
 );
 
@@ -108,8 +126,11 @@ const librarySlice = createSlice({
       state.sortBy = action.payload;
     },
     updateScanProgress: (state, action: PayloadAction<ScanProgress>) => {
-      state.scanProgress =
-        (action.payload.current / action.payload.total) * 100;
+      state.isScanning = action.payload.isScanning ?? state.isScanning;
+      if (action.payload.total > 0) {
+        state.scanProgress =
+          (action.payload.current / action.payload.total) * 100;
+      }
     },
     scanCompleted: (state) => {
       state.isScanning = false;
@@ -163,6 +184,10 @@ const librarySlice = createSlice({
         state.selectedTracks = state.selectedTracks.filter(
           (id: string) => id !== String(action.payload)
         );
+      })
+      // Stop scan
+      .addCase(stopScan.fulfilled, (state) => {
+        state.isScanning = false;
       });
   },
 });

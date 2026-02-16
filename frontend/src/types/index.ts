@@ -247,6 +247,8 @@ export interface ScanProgress {
   current: number;
   total: number;
   currentFile?: string;
+  isScanning?: boolean;
+  percentage?: number;
 }
 
 export interface LibraryState {

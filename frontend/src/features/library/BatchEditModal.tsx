@@ -164,7 +164,7 @@ export function BatchEditModal({
   const { data: crates = [] } = useQuery({
     queryKey: ['crates'],
     queryFn: async () => {
-      const response = await api.get('/api/crates');
+      const response = await api.get('/crates');
       return response.data;
     },
   });
@@ -172,7 +172,7 @@ export function BatchEditModal({
   // Batch update mutation
   const batchUpdateMutation = useMutation({
     mutationFn: async (data: { trackIds: number[]; updates: BatchEditUpdates }) => {
-      const response = await api.post('/api/batch/update', data);
+      const response = await api.post('/batch/update', data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -193,8 +193,8 @@ export function BatchEditModal({
   const crateMutation = useMutation({
     mutationFn: async (data: { trackIds: number[]; crateIds: number[]; action: 'add' | 'remove' }) => {
       const endpoint = data.action === 'add'
-        ? '/api/batch/add-to-crates'
-        : '/api/batch/remove-from-crates';
+        ? '/batch/add-to-crates'
+        : '/batch/remove-from-crates';
       const response = await api.post(endpoint, {
         trackIds: data.trackIds,
         crateIds: data.crateIds,
@@ -216,7 +216,7 @@ export function BatchEditModal({
   // Batch filename parsing mutation
   const parseFilenamesMutation = useMutation({
     mutationFn: async (data: { trackIds: number[]; pattern: string }) => {
-      const response = await api.post('/api/batch/parse-filenames', data);
+      const response = await api.post('/batch/parse-filenames', data);
       return response.data;
     },
     onSuccess: (data) => {

@@ -162,4 +162,81 @@ router.post("/generate-event", async (req, res) => {
   }
 });
 
+// POST /api/playlists/generate-valentine - Generate Valentine's Day playlist by era
+router.post("/generate-valentine", async (req, res) => {
+  try {
+    const { era = '2020s', duration = 3600 } = req.body;
+
+    if (!['80s', '90s', '2000s', '2010s', '2020s'].includes(era)) {
+      return res.status(400).json({ error: "Invalid era. Must be one of: 80s, 90s, 2000s, 2010s, 2020s" });
+    }
+
+    const playlist = await playlistGenerator.generateValentinePlaylist(era as any, duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating Valentine playlist:", error);
+    res.status(500).json({ error: "Failed to generate Valentine playlist" });
+  }
+});
+
+// POST /api/playlists/generate-gospel - Generate Gospel flow playlist
+router.post("/generate-gospel", async (req, res) => {
+  try {
+    const { duration = 3600 } = req.body;
+    const playlist = await playlistGenerator.generateGospelFlow(duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating Gospel playlist:", error);
+    res.status(500).json({ error: "Failed to generate Gospel playlist" });
+  }
+});
+
+// POST /api/playlists/generate-nigerian-party - Generate Nigerian party playlist
+router.post("/generate-nigerian-party", async (req, res) => {
+  try {
+    const { duration = 3600 } = req.body;
+    const playlist = await playlistGenerator.generateNigerianParty(duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating Nigerian party playlist:", error);
+    res.status(500).json({ error: "Failed to generate Nigerian party playlist" });
+  }
+});
+
+// POST /api/playlists/generate-nigerian-elder - Generate Nigerian elder-friendly playlist
+router.post("/generate-nigerian-elder", async (req, res) => {
+  try {
+    const { duration = 3600 } = req.body;
+    const playlist = await playlistGenerator.generateNigerianElderFriendly(duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating Nigerian elder-friendly playlist:", error);
+    res.status(500).json({ error: "Failed to generate Nigerian elder-friendly playlist" });
+  }
+});
+
+// POST /api/playlists/generate-nigerian-classic-modern - Generate Nigerian classic to modern blend
+router.post("/generate-nigerian-classic-modern", async (req, res) => {
+  try {
+    const { duration = 3600 } = req.body;
+    const playlist = await playlistGenerator.generateNigerianClassicModern(duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating Nigerian classic-modern playlist:", error);
+    res.status(500).json({ error: "Failed to generate Nigerian classic-modern playlist" });
+  }
+});
+
+// POST /api/playlists/generate-elder-friendly - Generate elder-friendly international playlist
+router.post("/generate-elder-friendly", async (req, res) => {
+  try {
+    const { duration = 3600 } = req.body;
+    const playlist = await playlistGenerator.generateElderFriendlyInternational(duration);
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error generating elder-friendly playlist:", error);
+    res.status(500).json({ error: "Failed to generate elder-friendly playlist" });
+  }
+});
+
 export default router;

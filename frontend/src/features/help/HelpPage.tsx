@@ -14,11 +14,11 @@ export const HelpPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
+      <div className="w-64 bg-card border-r border-border overflow-y-auto">
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Help & Documentation</h2>
+          <h2 className="text-2xl font-bold mb-6 text-foreground">Help & Documentation</h2>
           <nav className="space-y-2">
             {sections.map((section) => (
               <button
@@ -26,8 +26,8 @@ export const HelpPage: React.FC = () => {
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeSection === section.id
-                    ? 'bg-blue-600 text-white'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
                 }`}
               >
                 <span className="mr-2">{section.icon}</span>
@@ -54,7 +54,7 @@ export const HelpPage: React.FC = () => {
 };
 
 const GettingStartedSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>🚀 Getting Started</h1>
 
     <h2>Quick Start</h2>
@@ -89,7 +89,7 @@ const GettingStartedSection: React.FC = () => (
 );
 
 const SettingsSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>⚙️ Settings & Configuration</h1>
 
     <h2>Music Library Path</h2>
@@ -104,39 +104,39 @@ const SettingsSection: React.FC = () => (
 
     <h2>Port Configuration</h2>
     <p>The application uses the following ports:</p>
-    <table className="min-w-full border-collapse border border-gray-300">
+    <table className="min-w-full border-collapse border border-border">
       <thead>
-        <tr className="bg-gray-100">
-          <th className="border border-gray-300 px-4 py-2">Service</th>
-          <th className="border border-gray-300 px-4 py-2">Port</th>
-          <th className="border border-gray-300 px-4 py-2">URL</th>
+        <tr className="bg-muted">
+          <th className="border border-border px-4 py-2 text-foreground">Service</th>
+          <th className="border border-border px-4 py-2 text-foreground">Port</th>
+          <th className="border border-border px-4 py-2 text-foreground">URL</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td className="border border-gray-300 px-4 py-2">Frontend</td>
-          <td className="border border-gray-300 px-4 py-2">3000</td>
-          <td className="border border-gray-300 px-4 py-2">http://localhost:3000</td>
+          <td className="border border-border px-4 py-2">Frontend</td>
+          <td className="border border-border px-4 py-2">3000</td>
+          <td className="border border-border px-4 py-2">http://localhost:3000</td>
         </tr>
         <tr>
-          <td className="border border-gray-300 px-4 py-2">Backend</td>
-          <td className="border border-gray-300 px-4 py-2">5000</td>
-          <td className="border border-gray-300 px-4 py-2">http://localhost:5000</td>
+          <td className="border border-border px-4 py-2">Backend</td>
+          <td className="border border-border px-4 py-2">5000</td>
+          <td className="border border-border px-4 py-2">http://localhost:5000</td>
         </tr>
         <tr>
-          <td className="border border-gray-300 px-4 py-2">WebSocket</td>
-          <td className="border border-gray-300 px-4 py-2">5000</td>
-          <td className="border border-gray-300 px-4 py-2">ws://localhost:5000</td>
+          <td className="border border-border px-4 py-2">WebSocket</td>
+          <td className="border border-border px-4 py-2">5000</td>
+          <td className="border border-border px-4 py-2">ws://localhost:5000</td>
         </tr>
       </tbody>
     </table>
 
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-      <h3 className="text-yellow-800 font-semibold">⚠️ macOS Users: Port 5000 Conflict</h3>
-      <p className="text-yellow-700 mb-2">
+    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mt-4">
+      <h3 className="text-yellow-400 font-semibold">⚠️ macOS Users: Port 5000 Conflict</h3>
+      <p className="text-yellow-300 mb-2">
         macOS AirPlay Receiver uses port 5000 by default. You must disable it:
       </p>
-      <ol className="text-yellow-700">
+      <ol className="text-yellow-300">
         <li>Open <strong>System Settings</strong></li>
         <li>Go to <strong>General → AirDrop & Handoff</strong></li>
         <li>Turn <strong>OFF</strong> "AirPlay Receiver"</li>
@@ -147,7 +147,7 @@ const SettingsSection: React.FC = () => (
 );
 
 const SmartCratesSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>📦 Smart Crates</h1>
 
     <h2>What are Smart Crates?</h2>
@@ -202,7 +202,7 @@ const SmartCratesSection: React.FC = () => (
 );
 
 const PlaylistsSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>🎵 Playlists & Harmonic Mixing</h1>
 
     <h2>Harmonic Playlist Generation</h2>
@@ -246,7 +246,7 @@ const PlaylistsSection: React.FC = () => (
 );
 
 const AudioAnalysisSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>🔊 Audio Analysis</h1>
 
     <h2>Multi-Engine Analysis Pipeline</h2>
@@ -300,19 +300,19 @@ const AudioAnalysisSection: React.FC = () => (
 );
 
 const TroubleshootingSection: React.FC = () => (
-  <div className="prose max-w-none">
+  <div className="prose prose-invert max-w-none text-foreground">
     <h1>🛠️ Troubleshooting</h1>
 
     <h2>macOS Port 5000 Conflict (AirPlay Receiver)</h2>
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-      <h3 className="text-red-800 font-semibold">Symptom</h3>
-      <pre className="bg-red-100 p-2 rounded text-sm">
+    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+      <h3 className="text-red-400 font-semibold">Symptom</h3>
+      <pre className="bg-red-500/20 p-2 rounded text-sm text-red-300">
         Error: listen EADDRINUSE: address already in use :::5000
       </pre>
-      <p className="text-red-700">or backend server starts then immediately exits.</p>
+      <p className="text-red-300">or backend server starts then immediately exits.</p>
 
-      <h3 className="text-red-800 font-semibold mt-4">Solution</h3>
-      <ol className="text-red-700">
+      <h3 className="text-red-400 font-semibold mt-4">Solution</h3>
+      <ol className="text-red-300">
         <li>Open <strong>System Settings</strong></li>
         <li>Go to <strong>General → AirDrop & Handoff</strong></li>
         <li>Turn <strong>OFF</strong> "AirPlay Receiver"</li>
@@ -321,20 +321,20 @@ const TroubleshootingSection: React.FC = () => (
     </div>
 
     <h2>File Table Overflow (ENFILE Error)</h2>
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-      <h3 className="text-yellow-800 font-semibold">Symptom</h3>
-      <pre className="bg-yellow-100 p-2 rounded text-sm">
+    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+      <h3 className="text-yellow-400 font-semibold">Symptom</h3>
+      <pre className="bg-yellow-500/20 p-2 rounded text-sm text-yellow-300">
         Error: ENFILE: file table overflow, watch '/Users/you/Music'
       </pre>
 
-      <h3 className="text-yellow-800 font-semibold mt-4">Solution</h3>
-      <p className="text-yellow-700">
+      <h3 className="text-yellow-400 font-semibold mt-4">Solution</h3>
+      <p className="text-yellow-300">
         Your music library has too many files (10,000+). Disable file watching in <code>backend/.env</code>:
       </p>
-      <pre className="bg-yellow-100 p-2 rounded text-sm">
+      <pre className="bg-yellow-500/20 p-2 rounded text-sm text-yellow-300">
         WATCH_ENABLED=false
       </pre>
-      <p className="text-yellow-700">Then use manual "Scan Library" button instead.</p>
+      <p className="text-yellow-300">Then use manual "Scan Library" button instead.</p>
     </div>
 
     <h2>Database Not Initialized</h2>
@@ -353,7 +353,7 @@ const TroubleshootingSection: React.FC = () => (
 
     <h2>Aubio Not Found</h2>
     <p>If you see "Aubio not found" warnings:</p>
-    <pre className="bg-gray-100 p-2 rounded text-sm">
+    <pre className="bg-muted p-2 rounded text-sm text-foreground">
       # macOS
       brew install aubio
 
