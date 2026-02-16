@@ -789,8 +789,14 @@ For libraries with 50,000+ tracks:
 3. **Add indexes** - Already included in schema for `bpm`, `era`, `genre_tags`
 4. **Batch operations** - Use batch edit instead of updating tracks one-by-one
 
+## 📚 Additional Documentation
+
+- **[TRACK_METADATA_REFERENCE.md](TRACK_METADATA_REFERENCE.md)** - Comprehensive reference for all track metadata fields supported by MusicCrateIQ, including Serato, Rekordbox, and Traktor compatibility
+- **[API_SETUP_GUIDE.md](API_SETUP_GUIDE.md)** - API integration guide
+- **[METADATA_ENRICHMENT_SUMMARY.md](METADATA_ENRICHMENT_SUMMARY.md)** - Metadata enrichment features
+
 ## Acknowledgments
 
 - Built with modern web technologies
-- Inspired by professional DJ software
+- Inspired by professional DJ software (Serato, Rekordbox, Traktor)
 - Community-driven development

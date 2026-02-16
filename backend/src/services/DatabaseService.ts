@@ -10,26 +10,61 @@ export type AnalysisStatus = "pending" | "analyzing" | "complete" | "failed";
 export interface Track {
   id?: number;
   file_path: string;
+
+  // === STANDARD METADATA ===
   title: string;
   artist: string;
   album: string;
+  album_artist?: string;        // Album artist (compilation support)
   genre: string;
   label?: string;
   remixer?: string;
   composer?: string;
+  conductor?: string;           // Classical music support
+  lyricist?: string;            // Songwriting credits
+  publisher?: string;           // Publishing info
+  isrc?: string;                // International Standard Recording Code
   year?: number;
+  track_number?: number;        // Track # on album
+  disc_number?: number;         // Disc # for multi-disc albums
+  total_tracks?: number;        // Total tracks on album
+  total_discs?: number;         // Total discs
+  compilation?: boolean;        // Is part of compilation
+  copyright?: string;           // Copyright info
+  encoded_by?: string;          // Encoding software
+  original_artist?: string;     // Original artist (for covers)
+  original_album?: string;      // Original album
+  original_year?: number;       // Original release year
+
+  // === TECHNICAL METADATA ===
   duration: number;
   bitrate?: number;
   sample_rate?: number;
+  channels?: number;            // Mono/stereo/surround
+  bit_depth?: number;           // 16/24/32 bit
+  codec?: string;               // MP3/AAC/FLAC/etc
   file_size: number;
+  file_type?: string;           // Extension (mp3, flac, etc)
+
+  // === BPM/TEMPO ANALYSIS ===
   bpm: number;
   bpm_locked: boolean;
   bpm_confidence: number;
   bpm_source: AnalysisSource;
+  original_bpm?: number;        // Original BPM before adjustment
+  bpm_range_low?: number;       // BPM range for variable tempo
+  bpm_range_high?: number;
+  time_signature?: string;      // 4/4, 3/4, 6/8, etc
+
+  // === KEY ANALYSIS ===
   key_signature: string;
   key_locked: boolean;
   key_confidence: number;
   key_source: AnalysisSource;
+  camelot_code?: string;        // 1A-12B Camelot notation
+  open_key?: string;            // Open Key notation
+
+  // === AUDIO CHARACTERISTICS ===
   energy_level: number;
   danceability: number;
   valence: number;
@@ -39,34 +74,101 @@ export interface Track {
   speechiness: number;
   tempo_stability: number;
   dynamic_range: number;
+  loudness?: number;            // LUFS/dB
+  peak_level?: number;          // Peak amplitude
+  perceived_loudness?: number;  // Perceived loudness
+
+  // === DJ STRUCTURE ===
   intro_time: number;
   outro_time: number;
+  first_beat?: number;          // Time of first beat
+  first_downbeat?: number;      // Time of first downbeat
+  phrase_length?: number;       // Typical phrase length (bars)
+  drop_time?: number;           // Time of main drop
+  breakdown_time?: number;      // Time of breakdown
+
+  // === CONTENT FLAGS ===
   explicit_content: boolean;
   language?: string;
+  lyrics?: string;              // Full lyrics text
+  lyrics_synced?: string;       // LRC format synced lyrics
+
+  // === MOOD & CLASSIFICATION ===
   mood?: string;
-  mood_tags?: string; // JSON array of mood strings
-  genre_tags?: string; // JSON array of genre strings (e.g. afrobeat, highlife, gospel)
+  mood_tags?: string;           // JSON array of mood strings
+  genre_tags?: string;          // JSON array of genre strings
+  style_tags?: string;          // JSON array of style tags
+  situation_tags?: string;      // JSON: party, chill, workout, etc
   era?: Era;
+  decade?: string;              // 1970s, 1980s, etc
+
+  // === USER DATA ===
   color?: string;
   rating: number;
   play_count: number;
   skip_count: number;
   last_played?: Date;
   date_added: Date;
+  date_modified?: Date;
+  favorite?: boolean;
+
+  // === FILE TRACKING ===
   file_hash: string;
   analysis_status: AnalysisStatus;
   analysis_version?: string;
   needs_reanalysis: boolean;
+
+  // === SERATO SPECIFIC ===
   serato_id?: string;
-  beatgrid?: string;
-  cue_points?: string;
-  loops?: string;
-  waveform_overview?: string;
-  waveform_detail?: string;
+  serato_analysis_version?: string;
+  serato_autotags?: string;     // JSON: Serato auto-generated tags
+  serato_markers?: string;      // JSON: Serato marker data
+  serato_overview?: string;     // Serato overview waveform
+  serato_beatgrid?: string;     // Serato beatgrid format
+  serato_offsets?: string;      // Serato timing offsets
+  serato_flip?: string;         // JSON: Serato Flip data
+
+  // === REKORDBOX SPECIFIC ===
+  rekordbox_id?: string;
+  rekordbox_analysis_version?: string;
+  rekordbox_color?: string;     // Rekordbox track color
+  rekordbox_rating?: number;    // Rekordbox 0-255 rating
+  rekordbox_my_tag?: string;    // JSON: My Tag categories
+  rekordbox_mix_name?: string;  // Mix name field
+  rekordbox_phrase?: string;    // JSON: Phrase analysis data
+  rekordbox_active_cue?: number;// Active cue point index
+  rekordbox_quantize?: boolean; // Quantize enabled
+  rekordbox_tempo_range?: number;// Tempo slider range (6/10/16/wide)
+
+  // === TRAKTOR SPECIFIC ===
+  traktor_id?: string;
+  traktor_grid_offset?: number; // Beatgrid offset in ms
+  traktor_grid_locked?: boolean;
+  traktor_stripe?: string;      // Traktor stripe waveform
+  traktor_analyzed?: boolean;
+
+  // === UNIVERSAL DJ DATA (stored as JSON) ===
+  beatgrid?: string;            // JSON: Universal beatgrid format
+  cue_points?: string;          // JSON: Array of cue points with colors/names
+  hot_cues?: string;            // JSON: Hot cues (1-8) with positions/colors
+  memory_cues?: string;         // JSON: Memory cues (unlimited)
+  loops?: string;               // JSON: Saved loops with positions/colors
+  waveform_overview?: string;   // Base64: Overview waveform
+  waveform_detail?: string;     // Base64: Detailed waveform
+
+  // === ARTWORK ===
   artwork_path?: string;
+  artwork_embedded?: boolean;   // Has embedded artwork
+  artwork_url?: string;         // External artwork URL
+
+  // === ORGANIZATION ===
   comment?: string;
   grouping?: string;
   folder_path?: string;
+  catalog_number?: string;      // Release catalog number
+  release_type?: string;        // Single/EP/Album/Compilation
+
+  // === TIMESTAMPS ===
   created_at: Date;
   updated_at: Date;
 }
@@ -199,31 +301,66 @@ export class DatabaseService {
   private createTables(): void {
     if (!this.db) throw new Error("Database not initialized");
 
-    // Tracks table - main music library
+    // Tracks table - comprehensive DJ library with Serato/Rekordbox/Traktor support
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS tracks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_path TEXT UNIQUE NOT NULL,
+
+        -- Standard Metadata
         title TEXT NOT NULL,
         artist TEXT NOT NULL,
         album TEXT NOT NULL,
+        album_artist TEXT,
         genre TEXT NOT NULL,
         label TEXT,
         remixer TEXT,
         composer TEXT,
+        conductor TEXT,
+        lyricist TEXT,
+        publisher TEXT,
+        isrc TEXT,
         year INTEGER,
+        track_number INTEGER,
+        disc_number INTEGER,
+        total_tracks INTEGER,
+        total_discs INTEGER,
+        compilation INTEGER DEFAULT 0,
+        copyright TEXT,
+        encoded_by TEXT,
+        original_artist TEXT,
+        original_album TEXT,
+        original_year INTEGER,
+
+        -- Technical Metadata
         duration REAL NOT NULL,
         bitrate INTEGER,
         sample_rate INTEGER,
+        channels INTEGER,
+        bit_depth INTEGER,
+        codec TEXT,
         file_size INTEGER NOT NULL,
+        file_type TEXT,
+
+        -- BPM/Tempo Analysis
         bpm REAL NOT NULL,
         bpm_locked INTEGER DEFAULT 0,
         bpm_confidence REAL DEFAULT 0 CHECK(bpm_confidence BETWEEN 0 AND 1),
         bpm_source TEXT DEFAULT 'pending' CHECK(bpm_source IN ('metadata', 'aubio', 'essentia', 'manual', 'pending')),
+        original_bpm REAL,
+        bpm_range_low REAL,
+        bpm_range_high REAL,
+        time_signature TEXT DEFAULT '4/4',
+
+        -- Key Analysis
         key_signature TEXT NOT NULL,
         key_locked INTEGER DEFAULT 0,
         key_confidence REAL DEFAULT 0 CHECK(key_confidence BETWEEN 0 AND 1),
         key_source TEXT DEFAULT 'pending' CHECK(key_source IN ('metadata', 'aubio', 'essentia', 'manual', 'pending')),
+        camelot_code TEXT,
+        open_key TEXT,
+
+        -- Audio Characteristics
         energy_level INTEGER NOT NULL CHECK(energy_level BETWEEN 1 AND 5),
         danceability REAL NOT NULL CHECK(danceability BETWEEN 0 AND 1),
         valence REAL NOT NULL CHECK(valence BETWEEN 0 AND 1),
@@ -233,34 +370,101 @@ export class DatabaseService {
         speechiness REAL NOT NULL CHECK(speechiness BETWEEN 0 AND 1),
         tempo_stability REAL NOT NULL CHECK(tempo_stability BETWEEN 0 AND 1),
         dynamic_range REAL NOT NULL,
+        loudness REAL,
+        peak_level REAL,
+        perceived_loudness REAL,
+
+        -- DJ Structure
         intro_time REAL NOT NULL,
         outro_time REAL NOT NULL,
+        first_beat REAL,
+        first_downbeat REAL,
+        phrase_length INTEGER,
+        drop_time REAL,
+        breakdown_time REAL,
+
+        -- Content Flags
         explicit_content INTEGER DEFAULT 0 CHECK(explicit_content IN (0, 1)),
         language TEXT,
+        lyrics TEXT,
+        lyrics_synced TEXT,
+
+        -- Mood & Classification
         mood TEXT,
         mood_tags TEXT DEFAULT '[]',
         genre_tags TEXT DEFAULT '[]',
+        style_tags TEXT DEFAULT '[]',
+        situation_tags TEXT DEFAULT '[]',
         era TEXT CHECK(era IN ('70s', '80s', '90s', '2000s', '2010s', '2020s', NULL)),
+        decade TEXT,
+
+        -- User Data
         color TEXT,
         rating INTEGER DEFAULT 0 CHECK(rating BETWEEN 0 AND 5),
         play_count INTEGER DEFAULT 0,
         skip_count INTEGER DEFAULT 0,
         last_played DATETIME,
         date_added DATETIME DEFAULT CURRENT_TIMESTAMP,
+        date_modified DATETIME,
+        favorite INTEGER DEFAULT 0,
+
+        -- File Tracking
         file_hash TEXT NOT NULL,
         analysis_status TEXT DEFAULT 'pending' CHECK(analysis_status IN ('pending', 'analyzing', 'complete', 'failed')),
         analysis_version TEXT,
         needs_reanalysis INTEGER DEFAULT 0 CHECK(needs_reanalysis IN (0, 1)),
+
+        -- Serato Specific
         serato_id TEXT,
+        serato_analysis_version TEXT,
+        serato_autotags TEXT,
+        serato_markers TEXT,
+        serato_overview TEXT,
+        serato_beatgrid TEXT,
+        serato_offsets TEXT,
+        serato_flip TEXT,
+
+        -- Rekordbox Specific
+        rekordbox_id TEXT,
+        rekordbox_analysis_version TEXT,
+        rekordbox_color TEXT,
+        rekordbox_rating INTEGER,
+        rekordbox_my_tag TEXT,
+        rekordbox_mix_name TEXT,
+        rekordbox_phrase TEXT,
+        rekordbox_active_cue INTEGER,
+        rekordbox_quantize INTEGER DEFAULT 1,
+        rekordbox_tempo_range INTEGER DEFAULT 10,
+
+        -- Traktor Specific
+        traktor_id TEXT,
+        traktor_grid_offset REAL,
+        traktor_grid_locked INTEGER DEFAULT 0,
+        traktor_stripe TEXT,
+        traktor_analyzed INTEGER DEFAULT 0,
+
+        -- Universal DJ Data (JSON)
         beatgrid TEXT,
         cue_points TEXT,
+        hot_cues TEXT,
+        memory_cues TEXT,
         loops TEXT,
         waveform_overview TEXT,
         waveform_detail TEXT,
+
+        -- Artwork
         artwork_path TEXT,
+        artwork_embedded INTEGER DEFAULT 0,
+        artwork_url TEXT,
+
+        -- Organization
         comment TEXT,
         grouping TEXT,
         folder_path TEXT,
+        catalog_number TEXT,
+        release_type TEXT,
+
+        -- Timestamps
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -429,16 +633,115 @@ export class DatabaseService {
 
     // Define columns that may be missing from older schemas
     const migrations: { column: string; definition: string }[] = [
+      // Original migrations
       { column: "mood_tags", definition: "TEXT DEFAULT '[]'" },
       { column: "genre_tags", definition: "TEXT DEFAULT '[]'" },
-      { column: "era", definition: "TEXT CHECK(era IN ('70s', '80s', '90s', '2000s', '2010s', '2020s', NULL))" },
-      { column: "analysis_status", definition: "TEXT DEFAULT 'pending' CHECK(analysis_status IN ('pending', 'analyzing', 'complete', 'failed'))" },
-      { column: "needs_reanalysis", definition: "INTEGER DEFAULT 0 CHECK(needs_reanalysis IN (0, 1))" },
+      { column: "era", definition: "TEXT" },
+      { column: "analysis_status", definition: "TEXT DEFAULT 'pending'" },
+      { column: "needs_reanalysis", definition: "INTEGER DEFAULT 0" },
       { column: "bpm_confidence", definition: "REAL DEFAULT 0" },
       { column: "bpm_source", definition: "TEXT DEFAULT 'pending'" },
       { column: "key_confidence", definition: "REAL DEFAULT 0" },
       { column: "key_source", definition: "TEXT DEFAULT 'pending'" },
       { column: "analysis_version", definition: "TEXT" },
+
+      // Extended standard metadata
+      { column: "album_artist", definition: "TEXT" },
+      { column: "conductor", definition: "TEXT" },
+      { column: "lyricist", definition: "TEXT" },
+      { column: "publisher", definition: "TEXT" },
+      { column: "isrc", definition: "TEXT" },
+      { column: "track_number", definition: "INTEGER" },
+      { column: "disc_number", definition: "INTEGER" },
+      { column: "total_tracks", definition: "INTEGER" },
+      { column: "total_discs", definition: "INTEGER" },
+      { column: "compilation", definition: "INTEGER DEFAULT 0" },
+      { column: "copyright", definition: "TEXT" },
+      { column: "encoded_by", definition: "TEXT" },
+      { column: "original_artist", definition: "TEXT" },
+      { column: "original_album", definition: "TEXT" },
+      { column: "original_year", definition: "INTEGER" },
+
+      // Extended technical metadata
+      { column: "channels", definition: "INTEGER" },
+      { column: "bit_depth", definition: "INTEGER" },
+      { column: "codec", definition: "TEXT" },
+      { column: "file_type", definition: "TEXT" },
+
+      // Extended BPM/tempo fields
+      { column: "original_bpm", definition: "REAL" },
+      { column: "bpm_range_low", definition: "REAL" },
+      { column: "bpm_range_high", definition: "REAL" },
+      { column: "time_signature", definition: "TEXT DEFAULT '4/4'" },
+
+      // Extended key fields
+      { column: "camelot_code", definition: "TEXT" },
+      { column: "open_key", definition: "TEXT" },
+
+      // Extended audio characteristics
+      { column: "loudness", definition: "REAL" },
+      { column: "peak_level", definition: "REAL" },
+      { column: "perceived_loudness", definition: "REAL" },
+
+      // DJ structure fields
+      { column: "first_beat", definition: "REAL" },
+      { column: "first_downbeat", definition: "REAL" },
+      { column: "phrase_length", definition: "INTEGER" },
+      { column: "drop_time", definition: "REAL" },
+      { column: "breakdown_time", definition: "REAL" },
+
+      // Content fields
+      { column: "lyrics", definition: "TEXT" },
+      { column: "lyrics_synced", definition: "TEXT" },
+
+      // Extended classification
+      { column: "style_tags", definition: "TEXT DEFAULT '[]'" },
+      { column: "situation_tags", definition: "TEXT DEFAULT '[]'" },
+      { column: "decade", definition: "TEXT" },
+
+      // User data
+      { column: "date_modified", definition: "DATETIME" },
+      { column: "favorite", definition: "INTEGER DEFAULT 0" },
+
+      // Serato specific
+      { column: "serato_analysis_version", definition: "TEXT" },
+      { column: "serato_autotags", definition: "TEXT" },
+      { column: "serato_markers", definition: "TEXT" },
+      { column: "serato_overview", definition: "TEXT" },
+      { column: "serato_beatgrid", definition: "TEXT" },
+      { column: "serato_offsets", definition: "TEXT" },
+      { column: "serato_flip", definition: "TEXT" },
+
+      // Rekordbox specific
+      { column: "rekordbox_id", definition: "TEXT" },
+      { column: "rekordbox_analysis_version", definition: "TEXT" },
+      { column: "rekordbox_color", definition: "TEXT" },
+      { column: "rekordbox_rating", definition: "INTEGER" },
+      { column: "rekordbox_my_tag", definition: "TEXT" },
+      { column: "rekordbox_mix_name", definition: "TEXT" },
+      { column: "rekordbox_phrase", definition: "TEXT" },
+      { column: "rekordbox_active_cue", definition: "INTEGER" },
+      { column: "rekordbox_quantize", definition: "INTEGER DEFAULT 1" },
+      { column: "rekordbox_tempo_range", definition: "INTEGER DEFAULT 10" },
+
+      // Traktor specific
+      { column: "traktor_id", definition: "TEXT" },
+      { column: "traktor_grid_offset", definition: "REAL" },
+      { column: "traktor_grid_locked", definition: "INTEGER DEFAULT 0" },
+      { column: "traktor_stripe", definition: "TEXT" },
+      { column: "traktor_analyzed", definition: "INTEGER DEFAULT 0" },
+
+      // Extended DJ data
+      { column: "hot_cues", definition: "TEXT" },
+      { column: "memory_cues", definition: "TEXT" },
+
+      // Artwork
+      { column: "artwork_embedded", definition: "INTEGER DEFAULT 0" },
+      { column: "artwork_url", definition: "TEXT" },
+
+      // Organization
+      { column: "catalog_number", definition: "TEXT" },
+      { column: "release_type", definition: "TEXT" },
     ];
 
     let migrationsApplied = 0;
@@ -1114,72 +1417,21 @@ export class DatabaseService {
   ): number {
     if (!this.db) throw new Error("Database not initialized");
 
-    const stmt = this.db.prepare(`
-      INSERT INTO tracks (
-        file_path, title, artist, album, genre, label, remixer, composer, year,
-        duration, bitrate, sample_rate, file_size, bpm, bpm_locked, key_signature,
-        key_locked, energy_level, danceability, valence, acousticness, instrumentalness,
-        liveness, speechiness, tempo_stability, dynamic_range, intro_time, outro_time,
-        explicit_content, language, mood, color, rating, play_count, skip_count,
-        last_played, date_added, file_hash, serato_id, beatgrid, cue_points, loops,
-        waveform_overview, waveform_detail, artwork_path, comment, grouping, folder_path
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-    `);
-
-    // Sanitize all values to handle any unexpected objects/arrays from metadata parsing
-    const result = stmt.run(
-      this.sanitizeForSqlite(track.file_path),
-      this.sanitizeForSqlite(track.title),
-      this.sanitizeForSqlite(track.artist),
-      this.sanitizeForSqlite(track.album),
-      this.sanitizeForSqlite(track.genre),
-      this.sanitizeForSqlite(track.label),
-      this.sanitizeForSqlite(track.remixer),
-      this.sanitizeForSqlite(track.composer),
-      this.sanitizeForSqlite(track.year),
-      this.sanitizeForSqlite(track.duration),
-      this.sanitizeForSqlite(track.bitrate),
-      this.sanitizeForSqlite(track.sample_rate),
-      this.sanitizeForSqlite(track.file_size),
-      this.sanitizeForSqlite(track.bpm),
-      track.bpm_locked ? 1 : 0,
-      this.sanitizeForSqlite(track.key_signature),
-      track.key_locked ? 1 : 0,
-      this.sanitizeForSqlite(track.energy_level),
-      this.sanitizeForSqlite(track.danceability),
-      this.sanitizeForSqlite(track.valence),
-      this.sanitizeForSqlite(track.acousticness),
-      this.sanitizeForSqlite(track.instrumentalness),
-      this.sanitizeForSqlite(track.liveness),
-      this.sanitizeForSqlite(track.speechiness),
-      this.sanitizeForSqlite(track.tempo_stability),
-      this.sanitizeForSqlite(track.dynamic_range),
-      this.sanitizeForSqlite(track.intro_time),
-      this.sanitizeForSqlite(track.outro_time),
-      track.explicit_content ? 1 : 0,
-      this.sanitizeForSqlite(track.language),
-      this.sanitizeForSqlite(track.mood),
-      this.sanitizeForSqlite(track.color),
-      this.sanitizeForSqlite(track.rating),
-      this.sanitizeForSqlite(track.play_count),
-      this.sanitizeForSqlite(track.skip_count),
-      this.sanitizeForSqlite(track.last_played),
-      this.sanitizeForSqlite(track.date_added),
-      this.sanitizeForSqlite(track.file_hash),
-      this.sanitizeForSqlite(track.serato_id),
-      this.sanitizeForSqlite(track.beatgrid),
-      this.sanitizeForSqlite(track.cue_points),
-      this.sanitizeForSqlite(track.loops),
-      this.sanitizeForSqlite(track.waveform_overview),
-      this.sanitizeForSqlite(track.waveform_detail),
-      this.sanitizeForSqlite(track.artwork_path),
-      this.sanitizeForSqlite(track.comment),
-      this.sanitizeForSqlite(track.grouping),
-      this.sanitizeForSqlite(track.folder_path)
+    // Get all track properties except auto-generated ones
+    const excludedKeys = new Set(["id", "created_at", "updated_at"]);
+    const entries = Object.entries(track).filter(
+      ([key]) => !excludedKeys.has(key)
     );
 
+    const columns = entries.map(([key]) => key).join(", ");
+    const placeholders = entries.map(() => "?").join(", ");
+    const values = entries.map(([, value]) => this.sanitizeForSqlite(value));
+
+    const stmt = this.db.prepare(`
+      INSERT INTO tracks (${columns}) VALUES (${placeholders})
+    `);
+
+    const result = stmt.run(...values);
     return result.lastInsertRowid as number;
   }
 
