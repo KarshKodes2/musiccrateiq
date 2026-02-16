@@ -1128,55 +1128,56 @@ export class DatabaseService {
       )
     `);
 
+    // Sanitize all values to handle any unexpected objects/arrays from metadata parsing
     const result = stmt.run(
-      track.file_path,
-      track.title,
-      track.artist,
-      track.album,
-      track.genre,
-      track.label,
-      track.remixer,
-      track.composer,
-      track.year,
-      track.duration,
-      track.bitrate,
-      track.sample_rate,
-      track.file_size,
-      track.bpm,
+      this.sanitizeForSqlite(track.file_path),
+      this.sanitizeForSqlite(track.title),
+      this.sanitizeForSqlite(track.artist),
+      this.sanitizeForSqlite(track.album),
+      this.sanitizeForSqlite(track.genre),
+      this.sanitizeForSqlite(track.label),
+      this.sanitizeForSqlite(track.remixer),
+      this.sanitizeForSqlite(track.composer),
+      this.sanitizeForSqlite(track.year),
+      this.sanitizeForSqlite(track.duration),
+      this.sanitizeForSqlite(track.bitrate),
+      this.sanitizeForSqlite(track.sample_rate),
+      this.sanitizeForSqlite(track.file_size),
+      this.sanitizeForSqlite(track.bpm),
       track.bpm_locked ? 1 : 0,
-      track.key_signature,
+      this.sanitizeForSqlite(track.key_signature),
       track.key_locked ? 1 : 0,
-      track.energy_level,
-      track.danceability,
-      track.valence,
-      track.acousticness,
-      track.instrumentalness,
-      track.liveness,
-      track.speechiness,
-      track.tempo_stability,
-      track.dynamic_range,
-      track.intro_time,
-      track.outro_time,
+      this.sanitizeForSqlite(track.energy_level),
+      this.sanitizeForSqlite(track.danceability),
+      this.sanitizeForSqlite(track.valence),
+      this.sanitizeForSqlite(track.acousticness),
+      this.sanitizeForSqlite(track.instrumentalness),
+      this.sanitizeForSqlite(track.liveness),
+      this.sanitizeForSqlite(track.speechiness),
+      this.sanitizeForSqlite(track.tempo_stability),
+      this.sanitizeForSqlite(track.dynamic_range),
+      this.sanitizeForSqlite(track.intro_time),
+      this.sanitizeForSqlite(track.outro_time),
       track.explicit_content ? 1 : 0,
-      track.language,
+      this.sanitizeForSqlite(track.language),
       this.sanitizeForSqlite(track.mood),
-      track.color,
-      track.rating,
-      track.play_count,
-      track.skip_count,
-      track.last_played,
-      track.date_added,
-      track.file_hash,
-      track.serato_id,
+      this.sanitizeForSqlite(track.color),
+      this.sanitizeForSqlite(track.rating),
+      this.sanitizeForSqlite(track.play_count),
+      this.sanitizeForSqlite(track.skip_count),
+      this.sanitizeForSqlite(track.last_played),
+      this.sanitizeForSqlite(track.date_added),
+      this.sanitizeForSqlite(track.file_hash),
+      this.sanitizeForSqlite(track.serato_id),
       this.sanitizeForSqlite(track.beatgrid),
       this.sanitizeForSqlite(track.cue_points),
       this.sanitizeForSqlite(track.loops),
       this.sanitizeForSqlite(track.waveform_overview),
       this.sanitizeForSqlite(track.waveform_detail),
-      track.artwork_path,
-      track.comment,
-      track.grouping,
-      track.folder_path
+      this.sanitizeForSqlite(track.artwork_path),
+      this.sanitizeForSqlite(track.comment),
+      this.sanitizeForSqlite(track.grouping),
+      this.sanitizeForSqlite(track.folder_path)
     );
 
     return result.lastInsertRowid as number;
@@ -1192,22 +1193,10 @@ export class DatabaseService {
 
     if (!setClause) return false;
 
-    // Fields that may contain objects/arrays and need JSON serialization
-    const complexFields = ['beatgrid', 'cue_points', 'loops', 'waveform_overview', 'waveform_detail', 'mood'];
-
+    // Sanitize all values to handle any unexpected objects/arrays
     const values = Object.entries(updates)
       .filter(([key]) => key !== "id" && key !== "created_at")
-      .map(([key, value]) => {
-        // Handle complex fields that need JSON serialization
-        if (complexFields.includes(key)) {
-          return this.sanitizeForSqlite(value);
-        }
-        // Handle boolean to integer conversion for SQLite
-        if (typeof value === "boolean") {
-          return value ? 1 : 0;
-        }
-        return value;
-      });
+      .map(([, value]) => this.sanitizeForSqlite(value));
 
     const stmt = this.db.prepare(`
       UPDATE tracks 
