@@ -4,12 +4,12 @@ import { DatabaseService } from "../services/DatabaseService";
 import { PlaylistGenerator } from "../services/PlaylistGenerator";
 
 const router = Router();
-const databaseService = new DatabaseService();
 const playlistGenerator = new PlaylistGenerator();
 
 // GET /api/playlists - Get all playlists
 router.get("/", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const db = databaseService.getDatabase();
     const playlists = db
       .prepare(
@@ -33,6 +33,7 @@ router.get("/", async (req, res) => {
 // GET /api/playlists/:id - Get specific playlist
 router.get("/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const playlistId = Number(req.params.id);
     const db = databaseService.getDatabase();
 
@@ -56,7 +57,7 @@ router.get("/:id", async (req, res) => {
       )
       .all(playlistId);
 
-    res.json({ ...playlist, tracks });
+    res.json({ ...playlist as any, tracks });
   } catch (error) {
     console.error("Error getting playlist:", error);
     res.status(500).json({ error: "Failed to get playlist" });
@@ -66,6 +67,7 @@ router.get("/:id", async (req, res) => {
 // POST /api/playlists - Create new playlist
 router.post("/", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const { name, description, tracks = [] } = req.body;
     const db = databaseService.getDatabase();
 

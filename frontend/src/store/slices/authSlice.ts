@@ -6,6 +6,7 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  error: null,
 };
 
 // For now, we'll use a simple auth system
@@ -68,57 +69,3 @@ const authSlice = createSlice({
 
 export const { setUser } = authSlice.actions;
 export default authSlice.reducer;
-
-export const createCrate = createAsyncThunk(
-  "crates/createCrate",
-  async (data: CreateCrateData) => {
-    const response = await cratesAPI.createCrate(data);
-    return response.data;
-  }
-);
-
-export const addTracksToCrate = createAsyncThunk(
-  "crates/addTracks",
-  async ({ crateId, trackIds }: { crateId: string; trackIds: string[] }) => {
-    const response = await cratesAPI.addTracks(crateId, trackIds);
-    return response.data;
-  }
-);
-
-const cratesSlice = createSlice({
-  name: "crates",
-  initialState,
-  reducers: {
-    setSelectedCrate: (state, action: PayloadAction<string | null>) => {
-      state.selectedCrate = action.payload;
-    },
-    setDraggedTrack: (state, action: PayloadAction<string | null>) => {
-      state.draggedTrack = action.payload;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchCrates.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(fetchCrates.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.crates = action.payload;
-      })
-      .addCase(fetchCrates.rejected, (state) => {
-        state.isLoading = false;
-      })
-      .addCase(createCrate.fulfilled, (state, action) => {
-        state.crates.push(action.payload);
-      })
-      .addCase(addTracksToCrate.fulfilled, (state, action) => {
-        const index = state.crates.findIndex((c) => c.id === action.payload.id);
-        if (index !== -1) {
-          state.crates[index] = action.payload;
-        }
-      });
-  },
-});
-
-export const { setSelectedCrate, setDraggedTrack } = cratesSlice.actions;
-export default cratesSlice.reducer;

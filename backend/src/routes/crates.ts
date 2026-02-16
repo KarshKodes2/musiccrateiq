@@ -3,11 +3,11 @@ import { Router } from "express";
 import { DatabaseService } from "../services/DatabaseService";
 
 const router = Router();
-const databaseService = new DatabaseService();
 
 // GET /api/crates - Get all crates
 router.get("/", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const { type } = req.query;
 
     let crates;
@@ -27,6 +27,7 @@ router.get("/", async (req, res) => {
 // GET /api/crates/:id - Get specific crate
 router.get("/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crate = databaseService.getCrateById(Number(req.params.id));
     if (!crate) {
       return res.status(404).json({ error: "Crate not found" });
@@ -41,6 +42,7 @@ router.get("/:id", async (req, res) => {
 // GET /api/crates/:id/tracks - Get tracks in crate
 router.get("/:id/tracks", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const tracks = databaseService.getCrateTracks(Number(req.params.id));
     res.json(tracks);
   } catch (error) {
@@ -52,6 +54,7 @@ router.get("/:id/tracks", async (req, res) => {
 // POST /api/crates - Create new crate
 router.post("/", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crateData = {
       ...req.body,
       created_at: new Date(),
@@ -71,6 +74,7 @@ router.post("/", async (req, res) => {
 // PUT /api/crates/:id - Update crate
 router.put("/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crateId = Number(req.params.id);
     const updates = { ...req.body, updated_at: new Date() };
 
@@ -99,6 +103,7 @@ router.put("/:id", async (req, res) => {
 // DELETE /api/crates/:id - Delete crate
 router.delete("/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const db = databaseService.getDatabase();
     const result = db
       .prepare("DELETE FROM crates WHERE id = ?")
@@ -118,6 +123,7 @@ router.delete("/:id", async (req, res) => {
 // POST /api/crates/:id/tracks/:trackId - Add track to crate
 router.post("/:id/tracks/:trackId", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crateId = Number(req.params.id);
     const trackId = Number(req.params.trackId);
     const { position } = req.body;
@@ -137,6 +143,7 @@ router.post("/:id/tracks/:trackId", async (req, res) => {
 // DELETE /api/crates/:id/tracks/:trackId - Remove track from crate
 router.delete("/:id/tracks/:trackId", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crateId = Number(req.params.id);
     const trackId = Number(req.params.trackId);
 
@@ -155,6 +162,7 @@ router.delete("/:id/tracks/:trackId", async (req, res) => {
 // POST /api/crates/:id/refresh - Refresh smart crate
 router.post("/:id/refresh", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const crate = databaseService.getCrateById(Number(req.params.id));
     if (!crate) {
       return res.status(404).json({ error: "Crate not found" });
@@ -166,7 +174,7 @@ router.post("/:id/refresh", async (req, res) => {
 
     // Parse criteria and find matching tracks
     const criteria = JSON.parse(crate.criteria);
-    const matchingTrackIds = findTracksMatchingCriteria(criteria);
+    const matchingTrackIds = findTracksMatchingCriteria(criteria, databaseService);
 
     // Clear existing tracks and add new ones
     const db = databaseService.getDatabase();
@@ -188,7 +196,7 @@ router.post("/:id/refresh", async (req, res) => {
 });
 
 // Helper function for smart crate criteria
-function findTracksMatchingCriteria(criteria: any): number[] {
+function findTracksMatchingCriteria(criteria: any, databaseService: DatabaseService): number[] {
   const db = databaseService.getDatabase();
   let sql = "SELECT id FROM tracks WHERE 1=1";
   const params: any[] = [];

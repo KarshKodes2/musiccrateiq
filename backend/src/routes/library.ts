@@ -7,7 +7,6 @@ import multer from "multer";
 import path from "path";
 
 const router = Router();
-const databaseService = new DatabaseService();
 const libraryScanner = new LibraryScanner();
 const audioAnalyzer = new AudioAnalyzer();
 
@@ -31,6 +30,7 @@ const upload = multer({
 // GET /api/library/stats - Get library statistics
 router.get("/stats", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const stats = databaseService.getLibraryStats();
     res.json(stats);
   } catch (error) {
@@ -42,6 +42,7 @@ router.get("/stats", async (req, res) => {
 // GET /api/library/tracks - Get all tracks with pagination
 router.get("/tracks", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const {
       page = 1,
       limit = 50,
@@ -71,6 +72,7 @@ router.get("/tracks", async (req, res) => {
 // GET /api/library/tracks/:id - Get specific track
 router.get("/tracks/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const track = databaseService.getTrackById(Number(req.params.id));
     if (!track) {
       return res.status(404).json({ error: "Track not found" });
@@ -85,6 +87,7 @@ router.get("/tracks/:id", async (req, res) => {
 // PUT /api/library/tracks/:id - Update track
 router.put("/tracks/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const trackId = Number(req.params.id);
     const updates = req.body;
 
@@ -104,6 +107,7 @@ router.put("/tracks/:id", async (req, res) => {
 // DELETE /api/library/tracks/:id - Delete track
 router.delete("/tracks/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const success = databaseService.deleteTrack(Number(req.params.id));
     if (!success) {
       return res.status(404).json({ error: "Track not found" });
@@ -166,6 +170,7 @@ router.get("/scan/progress", (req, res) => {
 // POST /api/library/upload - Upload and analyze audio file
 router.post("/upload", upload.single("audioFile"), async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     if (!req.file) {
       return res.status(400).json({ error: "No audio file provided" });
     }
@@ -188,15 +193,16 @@ router.post("/upload", upload.single("audioFile"), async (req, res) => {
 // GET /api/library/duplicates - Find duplicate tracks
 router.get("/duplicates", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const db = databaseService.getDatabase();
     const duplicates = db
       .prepare(
         `
-      SELECT file_hash, COUNT(*) as count, 
+      SELECT file_hash, COUNT(*) as count,
              GROUP_CONCAT(id) as track_ids,
              GROUP_CONCAT(file_path) as file_paths
-      FROM tracks 
-      GROUP BY file_hash 
+      FROM tracks
+      GROUP BY file_hash
       HAVING count > 1
       ORDER BY count DESC
     `
@@ -213,6 +219,7 @@ router.get("/duplicates", async (req, res) => {
 // POST /api/library/analyze/:id - Re-analyze specific track
 router.post("/analyze/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const track = databaseService.getTrackById(Number(req.params.id));
     if (!track) {
       return res.status(404).json({ error: "Track not found" });

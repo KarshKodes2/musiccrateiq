@@ -199,3 +199,4 @@ function findTracksMatchingCriteria(criteria) {
     return results.map((row) => row.id);
 }
 exports.default = router;
+//# sourceMappingURL=crates.js.map

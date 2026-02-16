@@ -1,6 +1,6 @@
 // frontend/src/store/slices/searchSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { SearchState, SearchFilters, SearchResults } from "../../types";
+import { SearchState, SearchFilters } from "../../types";
 import { searchAPI } from "../../services/api";
 
 const initialState: SearchState = {
@@ -10,13 +10,14 @@ const initialState: SearchState = {
   suggestions: [],
   isLoading: false,
   recentSearches: [],
+  error: null,
 };
 
 export const searchTracks = createAsyncThunk(
   "search/searchTracks",
   async ({ query, filters }: { query: string; filters?: SearchFilters }) => {
     const response = await searchAPI.searchTracks(query, filters);
-    return response.data;
+    return response;
   }
 );
 
@@ -24,7 +25,7 @@ export const getSuggestions = createAsyncThunk(
   "search/getSuggestions",
   async (query: string) => {
     const response = await searchAPI.getSuggestions(query);
-    return response.data;
+    return response;
   }
 );
 

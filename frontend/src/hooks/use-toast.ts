@@ -1,8 +1,6 @@
 // frontend/src/hooks/use-toast.ts - Required for Toaster
 import * as React from "react";
-import ToastProps from '@/components/ui/toast';
-import type { ToastActionElement from '@/components/ui/toast';
-
+import type { ToastProps, ToastActionElement } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
@@ -11,7 +9,7 @@ type ToasterToast = ToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
-  action?: type { ToastActionElement;
+  action?: ToastActionElement;
 };
 
 const actionTypes = {
@@ -154,7 +152,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss();
       },
     },

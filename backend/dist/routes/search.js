@@ -210,3 +210,4 @@ router.get("/recommendations", async (req, res) => {
     }
 });
 exports.default = router;
+//# sourceMappingURL=search.js.map

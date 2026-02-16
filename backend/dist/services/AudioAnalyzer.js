@@ -895,3 +895,4 @@ class AudioAnalyzer {
     }
 }
 exports.AudioAnalyzer = AudioAnalyzer;
+//# sourceMappingURL=AudioAnalyzer.js.map

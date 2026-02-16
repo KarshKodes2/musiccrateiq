@@ -3,6 +3,10 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
+export type Era = "70s" | "80s" | "90s" | "2000s" | "2010s" | "2020s";
+export type AnalysisSource = "metadata" | "aubio" | "essentia" | "manual" | "pending";
+export type AnalysisStatus = "pending" | "analyzing" | "complete" | "failed";
+
 export interface Track {
   id?: number;
   file_path: string;
@@ -20,8 +24,12 @@ export interface Track {
   file_size: number;
   bpm: number;
   bpm_locked: boolean;
+  bpm_confidence: number;
+  bpm_source: AnalysisSource;
   key_signature: string;
   key_locked: boolean;
+  key_confidence: number;
+  key_source: AnalysisSource;
   energy_level: number;
   danceability: number;
   valence: number;
@@ -36,6 +44,9 @@ export interface Track {
   explicit_content: boolean;
   language?: string;
   mood?: string;
+  mood_tags?: string; // JSON array of mood strings
+  genre_tags?: string; // JSON array of genre strings (e.g. afrobeat, highlife, gospel)
+  era?: Era;
   color?: string;
   rating: number;
   play_count: number;
@@ -43,6 +54,9 @@ export interface Track {
   last_played?: Date;
   date_added: Date;
   file_hash: string;
+  analysis_status: AnalysisStatus;
+  analysis_version?: string;
+  needs_reanalysis: boolean;
   serato_id?: string;
   beatgrid?: string;
   cue_points?: string;
@@ -180,8 +194,12 @@ export class DatabaseService {
         file_size INTEGER NOT NULL,
         bpm REAL NOT NULL,
         bpm_locked INTEGER DEFAULT 0,
+        bpm_confidence REAL DEFAULT 0 CHECK(bpm_confidence BETWEEN 0 AND 1),
+        bpm_source TEXT DEFAULT 'pending' CHECK(bpm_source IN ('metadata', 'aubio', 'essentia', 'manual', 'pending')),
         key_signature TEXT NOT NULL,
         key_locked INTEGER DEFAULT 0,
+        key_confidence REAL DEFAULT 0 CHECK(key_confidence BETWEEN 0 AND 1),
+        key_source TEXT DEFAULT 'pending' CHECK(key_source IN ('metadata', 'aubio', 'essentia', 'manual', 'pending')),
         energy_level INTEGER NOT NULL CHECK(energy_level BETWEEN 1 AND 5),
         danceability REAL NOT NULL CHECK(danceability BETWEEN 0 AND 1),
         valence REAL NOT NULL CHECK(valence BETWEEN 0 AND 1),
@@ -196,6 +214,9 @@ export class DatabaseService {
         explicit_content INTEGER DEFAULT 0 CHECK(explicit_content IN (0, 1)),
         language TEXT,
         mood TEXT,
+        mood_tags TEXT DEFAULT '[]',
+        genre_tags TEXT DEFAULT '[]',
+        era TEXT CHECK(era IN ('70s', '80s', '90s', '2000s', '2010s', '2020s', NULL)),
         color TEXT,
         rating INTEGER DEFAULT 0 CHECK(rating BETWEEN 0 AND 5),
         play_count INTEGER DEFAULT 0,
@@ -203,6 +224,9 @@ export class DatabaseService {
         last_played DATETIME,
         date_added DATETIME DEFAULT CURRENT_TIMESTAMP,
         file_hash TEXT NOT NULL,
+        analysis_status TEXT DEFAULT 'pending' CHECK(analysis_status IN ('pending', 'analyzing', 'complete', 'failed')),
+        analysis_version TEXT,
+        needs_reanalysis INTEGER DEFAULT 0 CHECK(needs_reanalysis IN (0, 1)),
         serato_id TEXT,
         beatgrid TEXT,
         cue_points TEXT,
@@ -358,6 +382,15 @@ export class DatabaseService {
       )
     `);
 
+    // Settings table for app configuration
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log("✅ Database tables created successfully");
   }
 
@@ -379,6 +412,12 @@ export class DatabaseService {
       "CREATE INDEX IF NOT EXISTS idx_tracks_folder_path ON tracks(folder_path)",
       "CREATE INDEX IF NOT EXISTS idx_tracks_file_hash ON tracks(file_hash)",
       "CREATE INDEX IF NOT EXISTS idx_tracks_play_count ON tracks(play_count)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_era ON tracks(era)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_mood_tags ON tracks(mood_tags)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_genre_tags ON tracks(genre_tags)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_analysis_status ON tracks(analysis_status)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_needs_reanalysis ON tracks(needs_reanalysis)",
+      "CREATE INDEX IF NOT EXISTS idx_tracks_composite_bpm_key_energy ON tracks(bpm, key_signature, energy_level)",
 
       // Crate indexes
       "CREATE INDEX IF NOT EXISTS idx_crates_type ON crates(type)",
@@ -748,6 +787,233 @@ export class DatabaseService {
         color: "#32CD32",
         is_smart: 1,
         criteria: JSON.stringify({ days_since_added: { max: 30 } }),
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // OLD SKOOL CRATES
+      // ═══════════════════════════════════════════════════════════
+      {
+        name: "🌍 Old Skool International",
+        type: "era",
+        description: "Classic 80s-2000s international hits",
+        color: "#DAA520",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: ["80s", "90s", "2000s"],
+          valence: { min: 0.5 },
+        }),
+      },
+      {
+        name: "🏆 Old-Skool Gold (80s–2000s)",
+        type: "era",
+        description: "Top-rated classic tracks",
+        color: "#FFD700",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: ["80s", "90s", "2000s"],
+          rating: { min: 3 },
+        }),
+      },
+      {
+        name: "👴 Old Skool → Modern Blend (Elder-Friendly)",
+        type: "era",
+        description: "Classic tracks at relaxed tempo for elder audiences",
+        color: "#8B4513",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: ["80s", "90s", "2000s", "2010s"],
+          bpm: { max: 120 },
+        }),
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // NIGERIAN MUSIC CRATES
+      // ═══════════════════════════════════════════════════════════
+      {
+        name: "🎺 Afrobeat Classics (Fela Era)",
+        type: "genre",
+        description: "Classic Afrobeat from the 70s-90s",
+        color: "#228B22",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["afrobeat"],
+          era: ["70s", "80s", "90s"],
+        }),
+      },
+      {
+        name: "🎸 Highlife Gold",
+        type: "genre",
+        description: "Nigerian and Ghanaian highlife classics",
+        color: "#FFD700",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["highlife"],
+        }),
+      },
+      {
+        name: "🔥 Modern Afrobeats (2010s–2020s)",
+        type: "genre",
+        description: "Contemporary Afrobeats hits",
+        color: "#FF4500",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["afrobeats"],
+          era: ["2010s", "2020s"],
+        }),
+      },
+      {
+        name: "🇳🇬 Nigerian Old Skool Hits",
+        type: "era",
+        description: "Classic Nigerian music from the golden era",
+        color: "#008000",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["afrobeat", "highlife", "juju", "fuji"],
+          era: ["70s", "80s", "90s"],
+        }),
+      },
+      {
+        name: "🎉 Nigerian Elder-Friendly Party",
+        type: "event",
+        description: "Familiar Nigerian classics at moderate tempo",
+        color: "#006400",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["afrobeat", "highlife", "juju", "afrobeats"],
+          bpm: { min: 80, max: 120 },
+          valence: { min: 0.6 },
+        }),
+      },
+      {
+        name: "🎵 Juju Music",
+        type: "genre",
+        description: "Nigerian Juju music",
+        color: "#4169E1",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["juju"],
+        }),
+      },
+      {
+        name: "🕌 Fuji Vibes",
+        type: "genre",
+        description: "Nigerian Fuji music",
+        color: "#9932CC",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["fuji"],
+        }),
+      },
+      {
+        name: "🥁 Apala Rhythms",
+        type: "genre",
+        description: "Traditional Apala music",
+        color: "#8B4513",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["apala"],
+        }),
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // GOSPEL CRATES
+      // ═══════════════════════════════════════════════════════════
+      {
+        name: "✝️ Gospel Essentials",
+        type: "genre",
+        description: "Essential gospel and Christian music",
+        color: "#FFD700",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["gospel", "christian", "worship", "praise"],
+        }),
+      },
+      {
+        name: "🙏 Slow Praise (Worship)",
+        type: "genre",
+        description: "Reflective worship music",
+        color: "#4169E1",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["gospel", "worship"],
+          energy_level: { max: 3 },
+          bpm: { max: 90 },
+        }),
+      },
+      {
+        name: "🎤 High-Energy Worship",
+        type: "genre",
+        description: "Upbeat praise music",
+        color: "#FF6347",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          genre_tags: ["gospel", "praise"],
+          energy_level: { min: 4 },
+        }),
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // VALENTINE CRATES BY ERA
+      // ═══════════════════════════════════════════════════════════
+      {
+        name: "💜 80s Valentine",
+        type: "event",
+        description: "Romantic 80s R&B and Pop classics",
+        color: "#9370DB",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: "80s",
+          mood_tags: ["romantic", "love"],
+          genre_tags: ["rnb", "pop", "soul", "hip-hop"],
+        }),
+      },
+      {
+        name: "💙 90s Valentine",
+        type: "event",
+        description: "Romantic 90s R&B and New Jack Swing",
+        color: "#4169E1",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: "90s",
+          mood_tags: ["romantic", "love"],
+          genre_tags: ["rnb", "pop", "hip-hop", "new jack swing"],
+        }),
+      },
+      {
+        name: "💚 2000s Valentine",
+        type: "event",
+        description: "Romantic 2000s R&B and Pop",
+        color: "#3CB371",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: "2000s",
+          mood_tags: ["romantic", "love"],
+          genre_tags: ["rnb", "pop", "hip-hop"],
+        }),
+      },
+      {
+        name: "💛 2010s Valentine",
+        type: "event",
+        description: "Romantic 2010s R&B, Pop, and EDM",
+        color: "#FFD700",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: "2010s",
+          mood_tags: ["romantic", "love"],
+          genre_tags: ["rnb", "pop", "hip-hop", "edm"],
+        }),
+      },
+      {
+        name: "❤️ 2020s Valentine",
+        type: "event",
+        description: "Romantic 2020s R&B, Pop, and Afrobeats",
+        color: "#DC143C",
+        is_smart: 1,
+        criteria: JSON.stringify({
+          era: "2020s",
+          mood_tags: ["romantic", "love"],
+          genre_tags: ["rnb", "pop", "afrobeats"],
+        }),
       },
     ];
 
@@ -1395,6 +1661,20 @@ export class DatabaseService {
     return result.changes > 0;
   }
 
+  public getPlaylistTracks(playlistId: number): Track[] {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const stmt = this.db.prepare(`
+      SELECT t.*
+      FROM tracks t
+      INNER JOIN playlist_tracks pt ON t.id = pt.track_id
+      WHERE pt.playlist_id = ?
+      ORDER BY pt.position
+    `);
+
+    return stmt.all(playlistId) as Track[];
+  }
+
   // =============================================================================
   // ANALYTICS & PERFORMANCE
   // =============================================================================
@@ -1441,7 +1721,7 @@ export class DatabaseService {
       recentlyAdded: [
         this.db
           .prepare(
-            'SELECT COUNT(*) as count FROM tracks WHERE date_added > datetime("now", "-30 days")'
+            "SELECT COUNT(*) as count FROM tracks WHERE date_added > datetime('now', '-30 days')"
           )
           .get() as { count: number },
       ],

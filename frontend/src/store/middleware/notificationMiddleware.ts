@@ -1,11 +1,11 @@
 // frontend/src/store/middleware/notificationMiddleware.ts
-import { Middleware } from "@reduxjs/toolkit";
+import { Middleware, AnyAction } from "@reduxjs/toolkit";
 import { toast } from "sonner";
 import { addNotification } from "../slices/uiSlice";
 
 // Create the notification middleware
 export const notificationMiddleware: Middleware =
-  (store) => (next) => (action) => {
+  (_store) => (next) => (action: AnyAction) => {
     const result = next(action);
 
     // Listen for Redux notification actions and show Sonner toasts

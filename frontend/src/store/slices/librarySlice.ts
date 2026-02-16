@@ -2,7 +2,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   Track,
-  LibraryStats,
   LibraryState,
   SortOption,
   ScanProgress,
@@ -26,7 +25,8 @@ export const fetchTracks = createAsyncThunk(
   "library/fetchTracks",
   async (params?: { page?: number; limit?: number; sort?: SortOption }) => {
     const response = await libraryAPI.getTracks(params);
-    return response.data;
+    // Handle both array and paginated object responses
+    return Array.isArray(response) ? response : (response as { tracks: Track[] }).tracks;
   }
 );
 
@@ -39,9 +39,9 @@ export const scanLibrary = createAsyncThunk(
     // Set up progress polling
     const pollProgress = () => {
       return libraryAPI.getScanProgress().then((progressResponse) => {
-        if (progressResponse.data) {
-          dispatch(updateScanProgress(progressResponse.data));
-          if (progressResponse.data.current < progressResponse.data.total) {
+        if (progressResponse) {
+          dispatch(updateScanProgress(progressResponse));
+          if (progressResponse.current < progressResponse.total) {
             setTimeout(pollProgress, 1000);
           } else {
             dispatch(scanCompleted());
@@ -51,7 +51,7 @@ export const scanLibrary = createAsyncThunk(
     };
 
     pollProgress();
-    return response.data;
+    return response;
   }
 );
 
@@ -59,21 +59,21 @@ export const fetchLibraryStats = createAsyncThunk(
   "library/fetchStats",
   async () => {
     const response = await libraryAPI.getStats();
-    return response.data;
+    return response;
   }
 );
 
 export const updateTrack = createAsyncThunk(
   "library/updateTrack",
-  async ({ id, data }: { id: string; data: Partial<Track> }) => {
+  async ({ id, data }: { id: number; data: Partial<Track> }) => {
     const response = await libraryAPI.updateTrack(id, data);
-    return response.data;
+    return response;
   }
 );
 
 export const deleteTrack = createAsyncThunk(
   "library/deleteTrack",
-  async (id: string) => {
+  async (id: number) => {
     await libraryAPI.deleteTrack(id);
     return id;
   }
@@ -125,7 +125,7 @@ const librarySlice = createSlice({
       })
       .addCase(fetchTracks.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.tracks = action.payload.tracks || action.payload;
+        state.tracks = action.payload;
       })
       .addCase(fetchTracks.rejected, (state) => {
         state.isLoading = false;
@@ -135,7 +135,7 @@ const librarySlice = createSlice({
         state.isScanning = true;
         state.scanProgress = 0;
       })
-      .addCase(scanLibrary.fulfilled, (state) => {
+      .addCase(scanLibrary.fulfilled, (_state) => {
         // Progress will be updated via polling
       })
       .addCase(scanLibrary.rejected, (state) => {
@@ -149,7 +149,7 @@ const librarySlice = createSlice({
       // Update track
       .addCase(updateTrack.fulfilled, (state, action) => {
         const index = state.tracks.findIndex(
-          (track) => track.id === action.payload.id
+          (track: Track) => track.id === action.payload.id
         );
         if (index !== -1) {
           state.tracks[index] = action.payload;
@@ -158,10 +158,10 @@ const librarySlice = createSlice({
       // Delete track
       .addCase(deleteTrack.fulfilled, (state, action) => {
         state.tracks = state.tracks.filter(
-          (track) => track.id !== action.payload
+          (track: Track) => track.id !== action.payload
         );
         state.selectedTracks = state.selectedTracks.filter(
-          (id) => id !== action.payload
+          (id: string) => id !== String(action.payload)
         );
       });
   },

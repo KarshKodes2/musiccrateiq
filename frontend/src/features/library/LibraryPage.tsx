@@ -7,12 +7,13 @@ import {
   MoreHorizontal,
   Search,
   Filter,
-  Download,
   RefreshCw,
   Grid3X3,
   List,
   SortAsc,
   SortDesc,
+  Edit,
+  XSquare,
 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../store";
@@ -22,12 +23,12 @@ import {
   setViewMode,
   setSortBy,
 } from "../../store/slices/librarySlice";
-import { setCurrentTrack, playTrack } from "../../store/slices/audioSlice";
+import { setCurrentTrack, playTrack, pauseTrack } from "../../store/slices/audioSlice";
 import { addNotification } from "../../store/slices/uiSlice";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -52,16 +53,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import {
   formatDuration,
-  formatFileSize,
   formatBPM,
   formatKey,
   cn,
 } from "@/lib/utils";
 import { Track } from "../../types";
+import { BatchEditModal } from "./BatchEditModal";
 
 const LibraryPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -70,7 +72,6 @@ const LibraryPage: React.FC = () => {
     isLoading,
     viewMode,
     sortBy,
-    selectedTracks,
     isScanning,
     scanProgress,
   } = useAppSelector((state) => state.library);
@@ -81,9 +82,11 @@ const LibraryPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
+  const [showBatchEditModal, setShowBatchEditModal] = useState(false);
 
   // Fetch tracks on component mount
-  const { data, refetch } = useQuery({
+  useQuery({
     queryKey: ["tracks", sortBy],
     queryFn: () => dispatch(fetchTracks({ sort: sortBy })).unwrap(),
     enabled: !isLoading,
@@ -152,6 +155,40 @@ const LibraryPage: React.FC = () => {
     dispatch(setViewMode(mode));
   };
 
+  const handleToggleTrackSelection = (trackId: number) => {
+    setSelectedTrackIds((prev) =>
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTrackIds.length === filteredTracks.length) {
+      setSelectedTrackIds([]);
+    } else {
+      setSelectedTrackIds(filteredTracks.map((track) => track.id));
+    }
+  };
+
+  const handleOpenBatchEdit = () => {
+    if (selectedTrackIds.length === 0) {
+      dispatch(
+        addNotification({
+          type: "warning",
+          title: "No Tracks Selected",
+          message: "Please select at least one track to edit.",
+        })
+      );
+      return;
+    }
+    setShowBatchEditModal(true);
+  };
+
+  const selectedTracks = filteredTracks.filter((track) =>
+    selectedTrackIds.includes(track.id)
+  );
+
   if (isLoading && tracks.length === 0) {
     return <LibraryPageSkeleton />;
   }
@@ -189,7 +226,34 @@ const LibraryPage: React.FC = () => {
 
           {/* View controls */}
           <div className="flex items-center space-x-2">
-            <Tabs value={viewMode} onValueChange={handleViewModeChange}>
+            {selectedTrackIds.length > 0 && (
+              <div className="flex items-center space-x-2 mr-2 px-3 py-1 bg-primary/10 rounded-md">
+                <span className="text-sm font-medium">
+                  {selectedTrackIds.length} selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSelectAll}
+                  className="h-7"
+                >
+                  <XSquare className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {selectedTrackIds.length > 0 && (
+              <Button
+                onClick={handleOpenBatchEdit}
+                variant="default"
+                size="sm"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Batch Edit
+              </Button>
+            )}
+
+            <Tabs value={viewMode} onValueChange={(v) => handleViewModeChange(v as "list" | "grid" | "artwork")}>
               <TabsList className="grid w-fit grid-cols-3">
                 <TabsTrigger value="list" className="px-3">
                   <List className="h-4 w-4" />
@@ -233,28 +297,42 @@ const LibraryPage: React.FC = () => {
         {viewMode === "list" ? (
           <TrackTable
             tracks={filteredTracks}
-            currentTrack={currentTrack}
+            currentTrack={currentTrack ?? undefined}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
             onSortChange={handleSortChange}
             sortBy={sortBy}
+            selectedTrackIds={selectedTrackIds}
+            onToggleSelection={handleToggleTrackSelection}
+            onSelectAll={handleSelectAll}
           />
         ) : viewMode === "grid" ? (
           <TrackGrid
             tracks={filteredTracks}
-            currentTrack={currentTrack}
+            currentTrack={currentTrack ?? undefined}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
           />
         ) : (
           <ArtworkView
             tracks={filteredTracks}
-            currentTrack={currentTrack}
+            currentTrack={currentTrack ?? undefined}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
           />
         )}
       </div>
+
+      {/* Batch Edit Modal */}
+      <BatchEditModal
+        open={showBatchEditModal}
+        onClose={() => {
+          setShowBatchEditModal(false);
+          setSelectedTrackIds([]);
+        }}
+        selectedTrackIds={selectedTrackIds}
+        selectedTracks={selectedTracks}
+      />
     </div>
   );
 };
@@ -267,6 +345,9 @@ interface TrackTableProps {
   onPlayTrack: (track: Track) => void;
   onSortChange: (field: string) => void;
   sortBy: { field: string; direction: "asc" | "desc" };
+  selectedTrackIds: number[];
+  onToggleSelection: (trackId: number) => void;
+  onSelectAll: () => void;
 }
 
 const TrackTable: React.FC<TrackTableProps> = ({
@@ -276,6 +357,9 @@ const TrackTable: React.FC<TrackTableProps> = ({
   onPlayTrack,
   onSortChange,
   sortBy,
+  selectedTrackIds,
+  onToggleSelection,
+  onSelectAll,
 }) => {
   const SortIcon = ({ field }: { field: string }) => {
     if (sortBy.field !== field) return null;
@@ -286,11 +370,20 @@ const TrackTable: React.FC<TrackTableProps> = ({
     );
   };
 
+  const allSelected = tracks.length > 0 && selectedTrackIds.length === tracks.length;
+  const someSelected = selectedTrackIds.length > 0 && !allSelected;
+
   return (
     <div className="p-4">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox
+                checked={allSelected || (someSelected ? "indeterminate" : false)}
+                onCheckedChange={onSelectAll}
+              />
+            </TableHead>
             <TableHead className="w-12"></TableHead>
             <TableHead
               className="cursor-pointer hover:text-foreground"
@@ -337,16 +430,24 @@ const TrackTable: React.FC<TrackTableProps> = ({
         <TableBody>
           {tracks.map((track) => {
             const isCurrentTrack = currentTrack?.id === track.id;
+            const isSelected = selectedTrackIds.includes(track.id);
 
             return (
               <TableRow
                 key={track.id}
                 className={cn(
                   "cursor-pointer hover:bg-accent/50",
-                  isCurrentTrack && "bg-accent"
+                  isCurrentTrack && "bg-accent",
+                  isSelected && "bg-primary/10"
                 )}
                 onDoubleClick={() => onPlayTrack(track)}
               >
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => onToggleSelection(track.id)}
+                  />
+                </TableCell>
                 <TableCell>
                   <Button
                     size="icon"
@@ -371,7 +472,7 @@ const TrackTable: React.FC<TrackTableProps> = ({
                   {formatBPM(track.bpm)}
                 </TableCell>
                 <TableCell className="font-mono">
-                  {formatKey(track.key)}
+                  {formatKey(track.key_signature)}
                 </TableCell>
                 <TableCell className="text-right font-mono">
                   {formatDuration(track.duration)}
@@ -400,8 +501,16 @@ const TrackTable: React.FC<TrackTableProps> = ({
   );
 };
 
+// Simple props for grid/artwork views (no selection support)
+interface SimpleTrackViewProps {
+  tracks: Track[];
+  currentTrack?: Track;
+  isPlaying: boolean;
+  onPlayTrack: (track: Track) => void;
+}
+
 // Grid View Component (placeholder)
-const TrackGrid: React.FC<Omit<TrackTableProps, "onSortChange" | "sortBy">> = ({
+const TrackGrid: React.FC<SimpleTrackViewProps> = ({
   tracks,
 }) => {
   return (
@@ -428,9 +537,7 @@ const TrackGrid: React.FC<Omit<TrackTableProps, "onSortChange" | "sortBy">> = ({
 };
 
 // Artwork View Component (placeholder)
-const ArtworkView: React.FC<
-  Omit<TrackTableProps, "onSortChange" | "sortBy">
-> = ({ tracks }) => {
+const ArtworkView: React.FC<SimpleTrackViewProps> = ({ tracks }) => {
   return (
     <div className="p-4">
       <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-2">

@@ -1,0 +1,88 @@
+{
+  "name": "dj-library-manager",
+  "version": "1.0.0",
+  "description": "Professional DJ Library Management System - Lexicon DJ Alternative",
+  "main": "electron/main.js",
+  "author": "Your Name",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"wait-on http://localhost:3000 http://localhost:5000/health && cross-env NODE_ENV=development electron .\"",
+    "dev:backend": "pnpm --filter dj-library-manager-backend dev",
+    "dev:frontend": "pnpm --filter dj-library-manager-frontend dev",
+    "dev:services": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "build:backend": "pnpm --filter dj-library-manager-backend build",
+    "build:frontend": "pnpm --filter dj-library-manager-frontend build",
+    "pack": "pnpm run build && electron-builder --dir",
+    "dist": "pnpm run build && electron-builder",
+    "dist:mac": "pnpm run build && electron-builder --mac",
+    "dist:win": "pnpm run build && electron-builder --win",
+    "dist:linux": "pnpm run build && electron-builder --linux",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
+    "install:all": "pnpm install"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "electron",
+      "esbuild",
+      "sharp"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.djlibrarymanager.app",
+    "productName": "DJ Library Manager",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "backend/dist/**/*",
+      "backend/package.json",
+      "backend/node_modules/**/*",
+      "frontend/dist/**/*",
+      "!backend/src",
+      "!backend/tsconfig.json",
+      "!frontend/src",
+      "!frontend/tsconfig.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/database",
+        "to": "database",
+        "filter": ["*.db"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": ["dmg", "zip"],
+      "icon": "electron/assets/icon.icns",
+      "darkModeSupport": true
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "electron/assets/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Audio",
+      "icon": "electron/assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

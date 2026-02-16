@@ -1,6 +1,6 @@
 // frontend/src/store/slices/cratesSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Crate, CratesState, CreateCrateData } from "../../types";
+import { Crate, CratesState, Track } from "../../types";
 import { cratesAPI } from "../../services/api";
 
 const initialState: CratesState = {
@@ -8,46 +8,46 @@ const initialState: CratesState = {
   selectedCrate: null,
   isLoading: false,
   draggedTrack: null,
+  error: null,
 };
 
 // Async thunks
 export const fetchCrates = createAsyncThunk("crates/fetchCrates", async () => {
   const response = await cratesAPI.getCrates();
-  return response.data;
+  return response;
 });
 
-const playlistsSlice = createSlice({
-  name: "playlists",
+const cratesSlice = createSlice({
+  name: "crates",
   initialState,
   reducers: {
-    setCurrentPlaylist: (state, action: PayloadAction<string | null>) => {
-      state.currentPlaylist = action.payload;
+    setSelectedCrate: (state, action: PayloadAction<Crate | null>) => {
+      state.selectedCrate = action.payload;
+    },
+    setDraggedTrack: (state, action: PayloadAction<Track | null>) => {
+      state.draggedTrack = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPlaylists.pending, (state) => {
+      .addCase(fetchCrates.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
-      .addCase(fetchPlaylists.fulfilled, (state, action) => {
+      .addCase(fetchCrates.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.playlists = action.payload;
+        state.crates = action.payload;
       })
-      .addCase(fetchPlaylists.rejected, (state) => {
+      .addCase(fetchCrates.rejected, (state, action) => {
         state.isLoading = false;
-      })
-      .addCase(createPlaylist.pending, (state) => {
-        state.isCreating = true;
-      })
-      .addCase(createPlaylist.fulfilled, (state, action) => {
-        state.isCreating = false;
-        state.playlists.push(action.payload);
-      })
-      .addCase(createPlaylist.rejected, (state) => {
-        state.isCreating = false;
+        state.error = action.error.message || "Failed to fetch crates";
       });
   },
 });
 
-export const { setCurrentPlaylist } = playlistsSlice.actions;
-export default playlistsSlice.reducer;
+export const { setSelectedCrate, setDraggedTrack, clearError } =
+  cratesSlice.actions;
+export default cratesSlice.reducer;

@@ -1,0 +1,150 @@
+/* frontend/src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 263.4 70% 50.4%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* DJ-specific styles */
+  .waveform-container {
+    @apply relative w-full h-16 bg-muted rounded overflow-hidden;
+  }
+
+  .waveform-bar {
+    @apply bg-gradient-to-t from-primary to-purple-400;
+  }
+
+  .track-row {
+    @apply hover:bg-accent/50 transition-colors cursor-pointer;
+  }
+
+  .energy-badge {
+    @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
+  }
+
+  .energy-1 {
+    @apply bg-blue-500/10 text-blue-400 border border-blue-500/20;
+  }
+
+  .energy-2 {
+    @apply bg-green-500/10 text-green-400 border border-green-500/20;
+  }
+
+  .energy-3 {
+    @apply bg-yellow-500/10 text-yellow-400 border border-yellow-500/20;
+  }
+
+  .energy-4 {
+    @apply bg-orange-500/10 text-orange-400 border border-orange-500/20;
+  }
+
+  .energy-5 {
+    @apply bg-red-500/10 text-red-400 border border-red-500/20;
+  }
+
+  .key-badge {
+    @apply inline-flex items-center rounded-md px-2 py-1 text-xs font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20;
+  }
+
+  .bpm-badge {
+    @apply inline-flex items-center rounded-md px-2 py-1 text-xs font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20;
+  }
+
+  /* Audio player styles */
+  .audio-player {
+    @apply flex items-center gap-4 p-4;
+  }
+
+  .progress-bar {
+    @apply relative h-2 bg-muted rounded-full overflow-hidden cursor-pointer;
+  }
+
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-primary to-pink-600 transition-all;
+  }
+
+  /* Crate styles */
+  .crate-card {
+    @apply border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer;
+  }
+
+  .crate-smart {
+    @apply border-purple-500/50 bg-purple-500/5;
+  }
+
+  .crate-folder {
+    @apply border-blue-500/50 bg-blue-500/5;
+  }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Selection */
+::selection {
+  background: hsl(var(--primary) / 0.3);
+}
+
+/* Animation utilities */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

@@ -21,11 +21,11 @@ interface SearchFilters {
 }
 
 const router = Router();
-const databaseService = new DatabaseService();
 
 // GET /api/search - Advanced search
 router.get("/", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     // const {
     //   q = "",
     //   genre,
@@ -114,6 +114,7 @@ router.get("/", async (req, res) => {
 // GET /api/search/suggestions - Get search suggestions
 router.get("/suggestions", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const { q = "", type = "all" } = req.query;
     const db = databaseService.getDatabase();
 
@@ -124,9 +125,9 @@ router.get("/suggestions", async (req, res) => {
         .prepare(
           `
         SELECT DISTINCT artist as value, 'artist' as type, COUNT(*) as count
-        FROM tracks 
-        WHERE artist LIKE ? 
-        GROUP BY artist 
+        FROM tracks
+        WHERE artist LIKE ?
+        GROUP BY artist
         ORDER BY count DESC, artist
         LIMIT 10
       `
@@ -140,9 +141,9 @@ router.get("/suggestions", async (req, res) => {
         .prepare(
           `
         SELECT DISTINCT album as value, 'album' as type, COUNT(*) as count
-        FROM tracks 
-        WHERE album LIKE ? 
-        GROUP BY album 
+        FROM tracks
+        WHERE album LIKE ?
+        GROUP BY album
         ORDER BY count DESC, album
         LIMIT 10
       `
@@ -156,9 +157,9 @@ router.get("/suggestions", async (req, res) => {
         .prepare(
           `
         SELECT DISTINCT genre as value, 'genre' as type, COUNT(*) as count
-        FROM tracks 
-        WHERE genre LIKE ? 
-        GROUP BY genre 
+        FROM tracks
+        WHERE genre LIKE ?
+        GROUP BY genre
         ORDER BY count DESC, genre
         LIMIT 10
       `
@@ -177,6 +178,7 @@ router.get("/suggestions", async (req, res) => {
 // GET /api/search/similar/:id - Find similar tracks
 router.get("/similar/:id", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const trackId = Number(req.params.id);
     const track = databaseService.getTrackById(trackId);
 
@@ -190,7 +192,7 @@ router.get("/similar/:id", async (req, res) => {
     const similarTracks = db
       .prepare(
         `
-      SELECT *, 
+      SELECT *,
         (
           CASE WHEN ABS(bpm - ?) < 5 THEN 3 ELSE 0 END +
           CASE WHEN key_signature = ? THEN 3 ELSE 0 END +
@@ -199,8 +201,8 @@ router.get("/similar/:id", async (req, res) => {
           CASE WHEN ABS(valence - ?) < 0.2 THEN 1 ELSE 0 END +
           CASE WHEN ABS(danceability - ?) < 0.2 THEN 1 ELSE 0 END
         ) as similarity_score
-      FROM tracks 
-      WHERE id != ? 
+      FROM tracks
+      WHERE id != ?
       HAVING similarity_score > 3
       ORDER BY similarity_score DESC, rating DESC
       LIMIT 20
@@ -226,13 +228,14 @@ router.get("/similar/:id", async (req, res) => {
 // GET /api/search/recommendations - Get personalized recommendations
 router.get("/recommendations", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const { genre, mood, energy, limit = 20 } = req.query;
     const db = databaseService.getDatabase();
 
     let sql = `
-      SELECT *, 
+      SELECT *,
         (rating * 2 + play_count * 0.1) as recommendation_score
-      FROM tracks 
+      FROM tracks
       WHERE rating >= 3
     `;
     const params: any[] = [];

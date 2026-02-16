@@ -158,8 +158,8 @@ const AudioPlayer: React.FC = () => {
                   {formatBPM(currentTrack.bpm)} BPM
                 </Badge>
               )}
-              {currentTrack.key && (
-                <Badge variant="secondary">{formatKey(currentTrack.key)}</Badge>
+              {currentTrack.key_signature && (
+                <Badge variant="secondary">{formatKey(currentTrack.key_signature)}</Badge>
               )}
             </div>
           </div>

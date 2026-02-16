@@ -294,3 +294,4 @@ class LibraryScanner {
     }
 }
 exports.LibraryScanner = LibraryScanner;
+//# sourceMappingURL=LibraryScanner.js.map

@@ -1,8 +1,8 @@
 // backend/src/services/SeratoSyncService.ts
 import * as fs from "fs/promises";
 import * as path from "path";
-import * as os from "os";
 import { DatabaseService } from "./DatabaseService";
+import * as xml2js from "xml2js";
 
 export interface SeratoSyncResult {
   importedCrates: any[];
@@ -13,6 +13,11 @@ export interface SeratoSyncResult {
 }
 
 class SeratoSyncService {
+  private db: DatabaseService;
+  private seratoPath: string;
+  private parser: xml2js.Parser;
+  private builder: xml2js.Builder;
+
   constructor() {
     this.db = new DatabaseService();
     this.seratoPath = this.getSeratoPath();
@@ -69,7 +74,7 @@ class SeratoSyncService {
         const tracks = this.parseSeratoCrate(crateContent);
 
         // Create crate in our database
-        const crate = await this.db.createCrate({
+        const crate = this.db.insertCrate({
           name: crateName,
           type: "static",
           description: `Imported from Serato`,
@@ -101,8 +106,8 @@ class SeratoSyncService {
 
     try {
       const crates = crateIds
-        ? await Promise.all(crateIds.map((id) => this.db.getCrate(id)))
-        : await this.db.getAllCrates();
+        ? crateIds.map((id) => this.db.getCrateById(id)).filter(c => c !== null)
+        : this.db.getAllCrates();
 
       const cratesPath = path.join(this.seratoPath, "Subcrates");
 
@@ -115,7 +120,7 @@ class SeratoSyncService {
         console.log(`📁 Exporting crate: ${crate.name}`);
 
         // Get track file paths for this crate
-        const tracks = await this.db.getTracksByCrateId(crate.id);
+        const tracks = this.db.getCrateTracks(crate.id);
         const trackPaths = tracks.map((track) => track.path);
 
         // Generate Serato crate content
@@ -184,7 +189,7 @@ class SeratoSyncService {
         const trackIds = await this.matchPathsToTrackIds(trackPaths);
 
         // Create playlist in our database
-        const playlist = await this.db.createPlaylist({
+        const playlistId = this.db.insertPlaylist({
           name: playlistName,
           description: `Imported from Serato`,
           tracks: trackIds.map((trackId, index) => ({
@@ -221,8 +226,8 @@ class SeratoSyncService {
 
     try {
       const playlists = playlistIds
-        ? await Promise.all(playlistIds.map((id) => this.db.getPlaylist(id)))
-        : await this.db.getAllPlaylists();
+        ? playlistIds.map((id) => this.db.getPlaylistById(id)).filter(p => p !== null)
+        : this.db.getAllPlaylists();
 
       const playlistsPath = path.join(this.seratoPath, "Playlists");
 
@@ -235,7 +240,7 @@ class SeratoSyncService {
         console.log(`📝 Exporting playlist: ${playlist.name}`);
 
         // Get track file paths for this playlist
-        const tracks = await this.db.getTracksByPlaylistId(playlist.id);
+        const tracks = this.db.getPlaylistTracks(playlist.id);
         const trackPaths = tracks.map((track) => track.path);
 
         // Generate M3U playlist content
@@ -410,6 +415,8 @@ module.exports = { SeratoSyncService };
 
 // backend/src/cli/SeratoCLI.js
 class SeratoCLI {
+  private seratoSync: SeratoSyncService;
+
   constructor() {
     this.seratoSync = new SeratoSyncService();
   }
@@ -433,28 +440,28 @@ class SeratoCLI {
     console.log("🔄 Starting Serato sync...");
 
     if (options.crates && options.playlists) {
-      return await this.seratoSync.fullSync();
+      return await this.fullSync();
     } else if (options.crates) {
-      const imported = await this.seratoSync.importSeratoCrates();
-      const exported = await this.seratoSync.exportCratesToSerato();
+      const imported = await this.importSeratoCrates();
+      const exported = await this.exportCratesToSerato();
       return { imported, exported };
     } else if (options.playlists) {
-      const imported = await this.seratoSync.importSeratoPlaylists();
-      const exported = await this.seratoSync.exportPlaylistsToSerato();
+      const imported = await this.importSeratoPlaylists();
+      const exported = await this.exportPlaylistsToSerato();
       return { imported, exported };
     } else {
-      return await this.seratoSync.fullSync();
+      return await this.fullSync();
     }
   }
 
   async handleImport(options) {
     if (options.crates) {
-      return await this.seratoSync.importSeratoCrates();
+      return await this.importSeratoCrates();
     } else if (options.playlists) {
-      return await this.seratoSync.importSeratoPlaylists();
+      return await this.importSeratoPlaylists();
     } else {
-      const crates = await this.seratoSync.importSeratoCrates();
-      const playlists = await this.seratoSync.importSeratoPlaylists();
+      const crates = await this.importSeratoCrates();
+      const playlists = await this.importSeratoPlaylists();
       return { crates, playlists };
     }
   }
@@ -462,13 +469,13 @@ class SeratoCLI {
   async handleExport(options) {
     if (options.crates) {
       const crateIds = options.ids ? options.ids.split(",") : null;
-      return await this.seratoSync.exportCratesToSerato(crateIds);
+      return await this.exportCratesToSerato(crateIds);
     } else if (options.playlists) {
       const playlistIds = options.ids ? options.ids.split(",") : null;
-      return await this.seratoSync.exportPlaylistsToSerato(playlistIds);
+      return await this.exportPlaylistsToSerato(playlistIds);
     } else {
-      const crates = await this.seratoSync.exportCratesToSerato();
-      const playlists = await this.seratoSync.exportPlaylistsToSerato();
+      const crates = await this.exportCratesToSerato();
+      const playlists = await this.exportPlaylistsToSerato();
       return { crates, playlists };
     }
   }
@@ -478,8 +485,8 @@ class SeratoCLI {
     console.log("============================");
 
     try {
-      const seratoPath = this.seratoSync.seratoPath;
-      const exists = await this.seratoSync.pathExists(seratoPath);
+      const seratoPath = this.seratoPath;
+      const exists = await this.pathExists(seratoPath);
 
       console.log(`Serato Path: ${seratoPath}`);
       console.log(`Status: ${exists ? "✅ Found" : "❌ Not Found"}`);
@@ -488,8 +495,8 @@ class SeratoCLI {
         const cratesPath = path.join(seratoPath, "Subcrates");
         const playlistsPath = path.join(seratoPath, "Playlists");
 
-        const cratesExist = await this.seratoSync.pathExists(cratesPath);
-        const playlistsExist = await this.seratoSync.pathExists(playlistsPath);
+        const cratesExist = await this.pathExists(cratesPath);
+        const playlistsExist = await this.pathExists(playlistsPath);
 
         console.log(`Crates: ${cratesExist ? "✅ Available" : "❌ Not Found"}`);
         console.log(

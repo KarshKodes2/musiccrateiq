@@ -3,11 +3,11 @@ import { Router } from "express";
 import { DatabaseService } from "../services/DatabaseService";
 
 const router = Router();
-const databaseService = new DatabaseService();
 
 // GET /api/analytics/overview - Get analytics overview
 router.get("/overview", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const db = databaseService.getDatabase();
 
     const analytics = {
@@ -16,9 +16,9 @@ router.get("/overview", async (req, res) => {
         .prepare(
           `
         SELECT genre, COUNT(*) as count, AVG(rating) as avg_rating
-        FROM tracks 
-        GROUP BY genre 
-        ORDER BY count DESC 
+        FROM tracks
+        GROUP BY genre
+        ORDER BY count DESC
         LIMIT 10
       `
         )
@@ -27,9 +27,9 @@ router.get("/overview", async (req, res) => {
         .prepare(
           `
         SELECT artist, COUNT(*) as track_count, AVG(rating) as avg_rating
-        FROM tracks 
-        GROUP BY artist 
-        ORDER BY track_count DESC 
+        FROM tracks
+        GROUP BY artist
+        ORDER BY track_count DESC
         LIMIT 10
       `
         )
@@ -38,8 +38,8 @@ router.get("/overview", async (req, res) => {
         .prepare(
           `
         SELECT energy_level, COUNT(*) as count
-        FROM tracks 
-        GROUP BY energy_level 
+        FROM tracks
+        GROUP BY energy_level
         ORDER BY energy_level
       `
         )
@@ -48,8 +48,8 @@ router.get("/overview", async (req, res) => {
         .prepare(
           `
         SELECT key_signature, COUNT(*) as count
-        FROM tracks 
-        GROUP BY key_signature 
+        FROM tracks
+        GROUP BY key_signature
         ORDER BY count DESC
       `
         )
@@ -58,7 +58,7 @@ router.get("/overview", async (req, res) => {
         .prepare(
           `
         SELECT DATE(created_at) as date, COUNT(*) as tracks_added
-        FROM tracks 
+        FROM tracks
         WHERE created_at > datetime('now', '-30 days')
         GROUP BY DATE(created_at)
         ORDER BY date DESC
@@ -77,6 +77,7 @@ router.get("/overview", async (req, res) => {
 // POST /api/analytics/log-performance - Log track performance
 router.post("/log-performance", async (req, res) => {
   try {
+    const databaseService: DatabaseService = req.app.locals.databaseService;
     const {
       trackId,
       eventType,
@@ -92,8 +93,8 @@ router.post("/log-performance", async (req, res) => {
     const db = databaseService.getDatabase();
     db.prepare(
       `
-      INSERT INTO performance_log 
-      (track_id, event_type, venue, audience_size, crowd_response, 
+      INSERT INTO performance_log
+      (track_id, event_type, venue, audience_size, crowd_response,
        energy_context, time_of_day, success_rating, notes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
@@ -112,10 +113,10 @@ router.post("/log-performance", async (req, res) => {
     // Update track play count and rating
     db.prepare(
       `
-      UPDATE tracks 
-      SET play_count = play_count + 1, 
+      UPDATE tracks
+      SET play_count = play_count + 1,
           last_played = CURRENT_TIMESTAMP,
-          rating = CASE 
+          rating = CASE
             WHEN play_count = 0 THEN ?
             ELSE ((rating * play_count) + ?) / (play_count + 1)
           END

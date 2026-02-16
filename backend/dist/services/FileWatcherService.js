@@ -329,3 +329,4 @@ class FileWatcherService extends events_1.EventEmitter {
     }
 }
 exports.FileWatcherService = FileWatcherService;
+//# sourceMappingURL=FileWatcherService.js.map
