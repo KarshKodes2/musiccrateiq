@@ -142,6 +142,29 @@ export class DatabaseService {
     this.dbPath = process.env.DATABASE_PATH || "./database/dj-library.db";
   }
 
+  /**
+   * Sanitize a value for SQLite binding.
+   * SQLite can only bind: numbers, strings, bigints, buffers, and null.
+   * Objects and arrays must be serialized to JSON strings.
+   */
+  private sanitizeForSqlite(value: unknown): string | number | bigint | Buffer | null {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    if (typeof value === 'object' && !Buffer.isBuffer(value)) {
+      // Serialize objects and arrays to JSON strings
+      return JSON.stringify(value);
+    }
+    if (typeof value === 'boolean') {
+      return value ? 1 : 0;
+    }
+    if (typeof value === 'number' || typeof value === 'string' || typeof value === 'bigint' || Buffer.isBuffer(value)) {
+      return value;
+    }
+    // Fallback: convert to string
+    return String(value);
+  }
+
   public async initialize(): Promise<void> {
     try {
       // Ensure database directory exists
@@ -1136,7 +1159,7 @@ export class DatabaseService {
       track.outro_time,
       track.explicit_content ? 1 : 0,
       track.language,
-      track.mood,
+      this.sanitizeForSqlite(track.mood),
       track.color,
       track.rating,
       track.play_count,
@@ -1145,11 +1168,11 @@ export class DatabaseService {
       track.date_added,
       track.file_hash,
       track.serato_id,
-      track.beatgrid,
-      track.cue_points,
-      track.loops,
-      track.waveform_overview,
-      track.waveform_detail,
+      this.sanitizeForSqlite(track.beatgrid),
+      this.sanitizeForSqlite(track.cue_points),
+      this.sanitizeForSqlite(track.loops),
+      this.sanitizeForSqlite(track.waveform_overview),
+      this.sanitizeForSqlite(track.waveform_detail),
       track.artwork_path,
       track.comment,
       track.grouping,
@@ -1169,9 +1192,16 @@ export class DatabaseService {
 
     if (!setClause) return false;
 
+    // Fields that may contain objects/arrays and need JSON serialization
+    const complexFields = ['beatgrid', 'cue_points', 'loops', 'waveform_overview', 'waveform_detail', 'mood'];
+
     const values = Object.entries(updates)
       .filter(([key]) => key !== "id" && key !== "created_at")
-      .map(([, value]) => {
+      .map(([key, value]) => {
+        // Handle complex fields that need JSON serialization
+        if (complexFields.includes(key)) {
+          return this.sanitizeForSqlite(value);
+        }
         // Handle boolean to integer conversion for SQLite
         if (typeof value === "boolean") {
           return value ? 1 : 0;
